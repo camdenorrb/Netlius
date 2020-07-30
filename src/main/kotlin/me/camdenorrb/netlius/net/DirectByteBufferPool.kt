@@ -19,7 +19,7 @@ object DirectByteBufferPool {
 
 
     init {
-        GlobalScope.launch(Netlius.cachedThreadPoolDispatcher) {
+        CoroutineScope.launch {
             repeat(BUFFER_COUNT) {
                 byteBuffers.send(ByteBuffer.allocateDirect(BUFFER_SIZE))
             }
@@ -41,9 +41,15 @@ object DirectByteBufferPool {
 
         byteBuffer.clear()
 
-        GlobalScope.launch(Netlius.cachedThreadPoolDispatcher) {
+        CoroutineScope.launch {
             byteBuffers.send(byteBuffer)
         }
+    }
+
+    object CoroutineScope : kotlinx.coroutines.CoroutineScope {
+
+        override val coroutineContext = Netlius.cachedThreadPoolDispatcher
+
     }
 
 }

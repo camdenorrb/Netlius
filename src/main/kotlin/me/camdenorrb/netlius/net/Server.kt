@@ -1,9 +1,6 @@
 package me.camdenorrb.netlius.net
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import me.camdenorrb.netlius.Netlius
 import java.net.InetSocketAddress
 import java.net.StandardSocketOptions
@@ -29,7 +26,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
     private var onStop: Server.() -> Unit = {}
 
-    private var onConnect: Client.() -> Unit = {}
+    private var onConnect: suspend Client.() -> Unit = {}
 
     private var onDisconnect: Client.() -> Unit = {}
 
@@ -59,7 +56,10 @@ class Server internal constructor(val ip: String, val port: Int) {
                     channel.accept(continuation, AcceptCompletionHandler)
                 }
 
-                onConnect(client)
+                CoroutineScope(Netlius.cachedThreadPoolDispatcher).launch {
+                    onConnect(client)
+                }
+
                 clients += client
             }
         }
@@ -85,7 +85,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
 
 
-    fun onConnect(block: Client.() -> Unit) {
+    fun onConnect(block: suspend Client.() -> Unit) {
         onConnect = block
     }
 
