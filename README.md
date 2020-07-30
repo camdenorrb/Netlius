@@ -1,2 +1,2 @@
 # Netlius
-A experimental networking API for Kotlin
+An experimental networking API for Kotlin

@@ -28,4 +28,7 @@ tasks {
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
     }
+    wrapper {
+        gradleVersion = "6.5.1"
+    }
 }
