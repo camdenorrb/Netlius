@@ -1,2 +1,2 @@
 # Netlius
-A currently broken networking API for Kotlin
+A experimental networking API for Kotlin
