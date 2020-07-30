@@ -1,6 +1,5 @@
 package me.camdenorrb.netlius.net
 
-import java.nio.Buffer
 import java.nio.ByteBuffer
 
 class Packet {
@@ -110,7 +109,6 @@ class Packet {
         }
 
         block(byteBuffer)
-
         DirectByteBufferPool.give(byteBuffer)
     }
 

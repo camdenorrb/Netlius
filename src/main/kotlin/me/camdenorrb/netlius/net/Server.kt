@@ -1,13 +1,14 @@
 package me.camdenorrb.netlius.net
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.camdenorrb.netlius.Netlius
 import java.net.InetSocketAddress
 import java.net.StandardSocketOptions
 import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
-import java.util.*
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -17,6 +18,7 @@ import kotlin.coroutines.suspendCoroutine
 // TODO: Above can be moved to Netlius and Netlius can check this class's running count
 
 // TODO: Figure out how to detect disconnect
+// TODO: Add readTimeouts
 class Server internal constructor(val ip: String, val port: Int) {
 
     val clients = mutableListOf<Client>()
@@ -30,6 +32,9 @@ class Server internal constructor(val ip: String, val port: Int) {
 
     private var onDisconnect: Client.() -> Unit = {}
 
+
+    var isClosing = false
+        private set
 
     var isRunning = false
         private set
@@ -45,10 +50,11 @@ class Server internal constructor(val ip: String, val port: Int) {
         }
 
         channel = AsynchronousServerSocketChannel.open().bind(InetSocketAddress(ip, port))
+        channel.setOption(StandardSocketOptions.SO_RCVBUF, BUFFER_SIZE)
 
         isRunning = true
 
-        GlobalScope.launch((Netlius.cachedThreadPoolDispatcher)) {
+        CoroutineScope(Dispatchers.Default).launch {
 
             while (isRunning) {
 
@@ -56,8 +62,14 @@ class Server internal constructor(val ip: String, val port: Int) {
                     channel.accept(continuation, AcceptCompletionHandler)
                 }
 
-                CoroutineScope(Netlius.cachedThreadPoolDispatcher).launch {
-                    onConnect(client)
+                CoroutineScope(Dispatchers.Default).launch {
+                    try {
+                        onConnect(client)
+                    } catch (ex: Exception) {
+                        if (!isClosing) {
+                            throw ex
+                        }
+                    }
                 }
 
                 clients += client
@@ -65,7 +77,6 @@ class Server internal constructor(val ip: String, val port: Int) {
         }
 
         onStart()
-        Netlius.running++
     }
 
     fun stop() {
@@ -74,12 +85,11 @@ class Server internal constructor(val ip: String, val port: Int) {
             return
         }
 
+        isClosing = true
+
         onStop()
+        clients.clearingForEach(Client::close)
 
-        clients.forEach(Client::close)
-        clients.clear()
-
-        Netlius.running--
         isRunning = false
     }
 
@@ -89,6 +99,26 @@ class Server internal constructor(val ip: String, val port: Int) {
         onConnect = block
     }
 
+
+    private inline fun <T> MutableCollection<T>.clearingForEach(block: (T) -> Unit) {
+
+        val iterator = iterator()
+
+        while (iterator.hasNext()) {
+            val next = iterator.next()
+            iterator.remove()
+            block(next)
+        }
+    }
+
+
+    companion object {
+
+        const val BUFFER_SIZE = 8_192
+
+        const val IS_DEBUGGING = false
+
+    }
 
     object AcceptCompletionHandler : CompletionHandler<AsynchronousSocketChannel, Continuation<Client>> {
 

@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-io-jvm:0.1.16")
+    //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-io-jvm:0.1.16")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8-1.4.0-rc")
     implementation(kotlin("stdlib-jdk8"))
 }

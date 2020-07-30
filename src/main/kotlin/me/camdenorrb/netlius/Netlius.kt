@@ -16,35 +16,35 @@ import kotlin.coroutines.suspendCoroutine
 
 object Netlius {
 
-    val cachedThreadPoolDispatcher = Executors.newCachedThreadPool().asCoroutineDispatcher()
+    @Volatile
+    var isRunning = false
+        private set
 
     val keepRunningThread = thread(false) {
-        while (running > 0) {
-            Thread.sleep(Long.MAX_VALUE)
+        while (isRunning) {
+            Thread.sleep(500)
         }
     }
 
-    // Updated by starting/stopping Clients and Servers
-    internal var running = 0
-        set(value) {
-
-            if (value >= 1 && !keepRunningThread.isAlive) {
-                keepRunningThread.start()
-            }
-
-            field = value
-        }
-
-
     fun client(ip: String, port: Int): Client {
 
+        if (!keepRunningThread.isAlive) {
+            isRunning = true
+            keepRunningThread.start()
+        }
+
         val channel = AsynchronousSocketChannel.open()
-        channel.connect(InetSocketAddress(ip, port)).get(1, TimeUnit.MINUTES)
+        channel.connect(InetSocketAddress(ip, port)).get(30, TimeUnit.SECONDS)
 
         return Client(channel)
     }
 
     suspend fun clientSuspended(ip: String, port: Int): Client {
+
+        if (!keepRunningThread.isAlive) {
+            isRunning = true
+            keepRunningThread.start()
+        }
 
         lateinit var channel: AsynchronousSocketChannel
 
@@ -57,9 +57,20 @@ object Netlius {
     }
 
     fun server(ip: String, port: Int): Server {
+
+        if (!keepRunningThread.isAlive) {
+            isRunning = true
+            keepRunningThread.start()
+        }
+
         return Server(ip, port).apply { start() }
     }
 
+    fun stop() {
+        if (keepRunningThread.isAlive) {
+            isRunning = false
+        }
+    }
 
     object ClientCompletionHandler : CompletionHandler<Void, Continuation<Unit>> {
 

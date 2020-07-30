@@ -1,11 +1,18 @@
 package me.camdenorrb.netlius.net
 
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import me.camdenorrb.netlius.Netlius
 import java.net.StandardSocketOptions
+import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
+import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.AsynchronousSocketChannel
+import java.nio.channels.ClosedChannelException
 import java.nio.channels.CompletionHandler
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.*
+import kotlin.jvm.Throws
 
 // https://www.baeldung.com/java-nio2-async-socket-channel
 // TODO: Use a different coroutine for writing and reading
@@ -15,24 +22,27 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
 
 
     init {
-
-        Netlius.running++
-
+        channel.setOption(StandardSocketOptions.SO_RCVBUF, BUFFER_SIZE)
+        channel.setOption(StandardSocketOptions.SO_SNDBUF, BUFFER_SIZE)
         channel.setOption(StandardSocketOptions.TCP_NODELAY, true)
         channel.setOption(StandardSocketOptions.SO_KEEPALIVE, false)
     }
 
 
+    //This seems to cause issues
+    // TODO: Check for InterruptedByTimeoutException and disconnect if so
     suspend inline fun <T> read(size: Int, block: ByteBuffer.() -> T): T {
 
         val byteBuffer = DirectByteBufferPool.take(size)
+
+        //println("Size: $size, Capacity: ${byteBuffer.capacity()}, IsReadOnly: ${byteBuffer.isReadOnly}, IsDirect: ${byteBuffer.isDirect}, Order: ${byteBuffer.order()}, Limit: ${byteBuffer.limit()}, Position: ${byteBuffer.position()} Remaining: ${byteBuffer.remaining()}, HasRemaining: ${byteBuffer.hasRemaining()}}")
 
         if (IS_DEBUGGING) {
             println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
         }
 
         suspendCoroutine<Unit> { continuation ->
-            channel.read(byteBuffer, continuation, ReadCompletionHandler)
+            channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
         }
 
         if (IS_DEBUGGING) {
@@ -78,7 +88,7 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
         val data = ByteArray(size)
 
         read(size) {
-            get(data)
+            get(0, data)
         }
 
         return data.decodeToString()
@@ -93,7 +103,6 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
         flush()
     }
 
-
     suspend fun flush() {
 
         var bytes = 0
@@ -105,7 +114,7 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
                 bytes += it.remaining()
 
                 suspendCoroutine<Unit> { continuation ->
-                    channel.write(it, continuation, WriteCompletionHandler)
+                    channel.write(it, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
                 }
             }
 
@@ -118,9 +127,9 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
     }
 
 
+    @Throws(AsynchronousCloseException::class, BufferUnderflowException::class)
     fun close() {
         channel.close()
-        Netlius.running--
     }
 
 
@@ -167,6 +176,8 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
 
 
     companion object {
+
+        const val BUFFER_SIZE = 8_192
 
         const val IS_DEBUGGING = false
 
