@@ -1,4 +1,0 @@
-jdk:
-  - openjdk12
-install:
-  - ./gradlew clean install
