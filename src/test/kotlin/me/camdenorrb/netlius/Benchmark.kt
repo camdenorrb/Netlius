@@ -33,7 +33,7 @@ class Benchmark {
 
     companion object {
 
-        const val DEFAULT_CYCLES = 10_000_000
+        const val DEFAULT_CYCLES = 1_000_000
 
     }
 

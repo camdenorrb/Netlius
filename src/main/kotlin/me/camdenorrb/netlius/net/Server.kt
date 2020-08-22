@@ -113,6 +113,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
     companion object {
 
+        // Might want to rename to DEFAULT_BUFFER_SIZE and move to Netlius
         const val BUFFER_SIZE = 8_192
 
         const val IS_DEBUGGING = false
@@ -122,7 +123,7 @@ class Server internal constructor(val ip: String, val port: Int) {
     object AcceptCompletionHandler : CompletionHandler<AsynchronousSocketChannel, Continuation<Client>> {
 
         override fun completed(result: AsynchronousSocketChannel, attachment: Continuation<Client>) {
-            attachment.resume(Client(result, Netlius.serverByteBufferPool))
+            attachment.resume(Client(result, Netlius.byteBufferPool))
         }
 
         override fun failed(exc: Throwable, attachment: Continuation<Client>) {

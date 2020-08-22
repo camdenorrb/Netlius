@@ -16,9 +16,7 @@ import kotlin.coroutines.suspendCoroutine
 
 object Netlius {
 
-    internal val clientByteBufferPool = DirectByteBufferPool(10)
-
-    internal val serverByteBufferPool = DirectByteBufferPool(10)
+    val byteBufferPool = DirectByteBufferPool(10)
 
     internal val threadPoolDispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher()
 
@@ -28,7 +26,7 @@ object Netlius {
         val channel = AsynchronousSocketChannel.open()
         channel.connect(InetSocketAddress(ip, port)).get(30, TimeUnit.SECONDS)
 
-        return Client(channel, clientByteBufferPool)
+        return Client(channel, byteBufferPool)
     }
 
     suspend fun clientSuspending(ip: String, port: Int): Client {
@@ -40,7 +38,7 @@ object Netlius {
             channel.connect(InetSocketAddress(ip, port), continuation, ClientCompletionHandler)
         }
 
-        return Client(channel, clientByteBufferPool)
+        return Client(channel, byteBufferPool)
     }
 
     fun server(ip: String, port: Int): Server {

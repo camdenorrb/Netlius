@@ -11,12 +11,11 @@ class DirectByteBufferPool(size: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE)
 
 
     inline fun take(size: Int = DEFAULT_BUFFER_SIZE, block: (ByteBuffer) -> Unit) {
-
         val byteBuffer = if (size > bufferSize) {
             ByteBuffer.allocateDirect(size)
         }
         else {
-            byteBuffers.poll() ?: ByteBuffer.allocateDirect(size)
+            byteBuffers.poll() ?: ByteBuffer.allocateDirect(size).also { println("Here") }
         }
 
         byteBuffer.limit(size)
