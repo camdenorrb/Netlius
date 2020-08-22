@@ -1,12 +1,10 @@
 package me.camdenorrb.netlius
 
-import kotlinx.coroutines.asCoroutineDispatcher
 import me.camdenorrb.netlius.net.Client
 import me.camdenorrb.netlius.net.Server
 import java.net.InetSocketAddress
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.coroutines.Continuation
@@ -22,7 +20,7 @@ object Netlius {
 
     val keepRunningThread = thread(false) {
         while (isRunning) {
-            Thread.sleep(500)
+            Thread.onSpinWait()
         }
     }
 

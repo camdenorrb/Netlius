@@ -1,9 +1,7 @@
 package me.camdenorrb.netlius
 
 import kotlinx.coroutines.*
-import me.camdenorrb.netlius.net.DirectByteBufferPool
 import me.camdenorrb.netlius.net.Packet
-import java.lang.Exception
 
 // This project should essentially be a bridge between the driver and JVM along with some coroutines
 // TODO: Could potentially use https://github.com/rambodrahmani/linux-pspat for now
@@ -24,15 +22,12 @@ object Main {
 
         repeat(100) {
             val client = Netlius.clientSuspended("127.0.0.1", 25565)
-            client.queueAndFlush(Packet().string("Meow${count++}"))
+            client.queueAndFlush(Packet().string("Test${count++}"))
         }
 
-        delay(1000)
-
         server.stop()
-        delay(1000)
 
-        println(DirectByteBufferPool.byteBuffers.firstEntry().value.size)
+        //println(DirectByteBufferPool.byteBuffers.firstEntry().value.size)
 
         Netlius.stop()
 

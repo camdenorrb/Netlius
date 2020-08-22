@@ -4,13 +4,19 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 
+/*
+    Make a couple 8MB DirectByteBuffers and reuse it until all the data is written then return.
+*/
 object DirectByteBufferPool {
 
     // Sorted by lowest -> highest
-    val byteBuffers = ConcurrentSkipListMap<Int, ConcurrentLinkedQueue<ByteBuffer>>()
+    //val byteBuffers = ConcurrentSkipListMap<Int, ConcurrentLinkedQueue<ByteBuffer>>()
 
 
     fun take(size: Int): ByteBuffer {
+        return ByteBuffer.allocateDirect(size)
+
+        /*
         return try {
 
             val entry = byteBuffers.ceilingEntry(size)
@@ -25,7 +31,6 @@ object DirectByteBufferPool {
 
             when (ex) {
 
-                is NullPointerException,
                 is NoSuchElementException -> {
                     ByteBuffer.allocateDirect(size)
                 }
@@ -33,11 +38,14 @@ object DirectByteBufferPool {
                 else -> throw ex
             }
         }
+        */
     }
 
     fun give(byteBuffer: ByteBuffer) {
+        /*
         byteBuffer.clear()
         byteBuffers.getOrPut(byteBuffer.remaining(), { ConcurrentLinkedQueue() }).add(byteBuffer)
+        */
     }
 
 }

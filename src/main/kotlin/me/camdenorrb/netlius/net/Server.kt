@@ -24,13 +24,13 @@ class Server internal constructor(val ip: String, val port: Int) {
     val clients = mutableListOf<Client>()
 
 
-    private var onStart: Server.() -> Unit = {}
+    private var onStartListeners = mutableListOf<Server.() -> Unit>()
 
-    private var onStop: Server.() -> Unit = {}
+    private var onStopListeners = mutableListOf<Server.() -> Unit>()
 
-    private var onConnect: suspend Client.() -> Unit = {}
+    private var onConnectListeners = mutableListOf<suspend Client.() -> Unit>()
 
-    private var onDisconnect: Client.() -> Unit = {}
+    private var onDisconnectListeners = mutableListOf<Client.() -> Unit>()
 
 
     var isClosing = false
@@ -64,7 +64,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
                 CoroutineScope(Dispatchers.Default).launch {
                     try {
-                        onConnect(client)
+                        onConnectListeners.forEach { it(client) }
                     } catch (ex: Exception) {
                         if (!isClosing) {
                             throw ex
@@ -76,7 +76,7 @@ class Server internal constructor(val ip: String, val port: Int) {
             }
         }
 
-        onStart()
+        onStartListeners.forEach { it(this) }
     }
 
     fun stop() {
@@ -87,7 +87,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
         isClosing = true
 
-        onStop()
+        onStopListeners.forEach { it(this) }
         clients.clearingForEach(Client::close)
 
         isRunning = false
@@ -96,7 +96,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
 
     fun onConnect(block: suspend Client.() -> Unit) {
-        onConnect = block
+        onConnectListeners.add(block)
     }
 
 

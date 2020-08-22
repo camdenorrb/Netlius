@@ -10,15 +10,29 @@ import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.ClosedChannelException
 import java.nio.channels.CompletionHandler
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.*
 import kotlin.jvm.Throws
 
 // https://www.baeldung.com/java-nio2-async-socket-channel
 // TODO: Use a different coroutine for writing and reading
-class Client internal constructor(val channel: AsynchronousSocketChannel) {
+
+typealias ClientListener = (Client) -> Unit
+
+class Client internal constructor(channel: AsynchronousSocketChannel) {
 
     val packetQueue = mutableListOf<Packet>()
+
+    var channel = channel
+        private set
+
+    /*
+    var isClosing = false
+        private set
+    */
+
+    val listeners = EnumMap<Event, MutableList<ClientListener>>(Event::class.java)
 
 
     init {
@@ -26,6 +40,14 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
         channel.setOption(StandardSocketOptions.SO_SNDBUF, BUFFER_SIZE)
         channel.setOption(StandardSocketOptions.TCP_NODELAY, true)
         channel.setOption(StandardSocketOptions.SO_KEEPALIVE, false)
+    }
+
+    fun onConnect(block: (Client) -> Unit) {
+        listeners.getOrPut(Event.CONNECT, { mutableListOf() }) += block
+    }
+
+    fun onDisconnect(block: (Client) -> Unit) {
+        listeners.getOrPut(Event.DISCONNECT, { mutableListOf() }) += block
     }
 
 
@@ -42,7 +64,12 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
         }
 
         suspendCoroutine<Unit> { continuation ->
-            channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
+            try {
+                channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
+            }
+            catch (ex: Exception) {
+                close()
+            }
         }
 
         if (IS_DEBUGGING) {
@@ -114,7 +141,12 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
                 bytes += it.remaining()
 
                 suspendCoroutine<Unit> { continuation ->
-                    channel.write(it, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
+                    try {
+                        channel.write(it, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
+                    }
+                    catch (ex: Exception) {
+                        close()
+                    }
                 }
             }
 
@@ -129,6 +161,11 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
 
     @Throws(AsynchronousCloseException::class, BufferUnderflowException::class)
     fun close() {
+
+        listeners[Event.DISCONNECT]?.clearingForEach {
+            it.invoke(this)
+        }
+
         channel.close()
     }
 
@@ -172,6 +209,12 @@ class Client internal constructor(val channel: AsynchronousSocketChannel) {
             attachment.resumeWithException(exc)
         }
 
+    }
+
+    // Turn into a sealed class if you need a variety of parameters
+    enum class Event {
+        CONNECT,
+        DISCONNECT,
     }
 
 
