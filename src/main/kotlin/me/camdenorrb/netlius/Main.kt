@@ -1,5 +1,6 @@
 package me.camdenorrb.netlius
 
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import me.camdenorrb.netlius.net.Packet
 
@@ -18,17 +19,24 @@ object Main {
             }
         }
 
-        var count = 0
+        val count = atomic(0)
 
-        repeat(100) {
-            val client = Netlius.clientSuspending("127.0.0.1", 25565)
-            client.queueAndFlush(Packet().string("Test${count++}"))
-        }
+        (0..100).map {
+            async(Netlius.threadPoolDispatcher) {
+                val client = Netlius.clientSuspending("127.0.0.1", 25565)
+                client.queueAndFlush(Packet().string("Test${count.getAndAdd(1)}"))
+            }
+        }.awaitAll()
 
-        server.stop()
 
         //println(DirectByteBufferPool.byteBuffers.firstEntry().value.size)
 
+        delay(1000)
+
+
+        println(count)
+
+        server.stop()
         Netlius.stop()
 
         //println(server.clients.size)

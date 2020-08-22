@@ -69,6 +69,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                     channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
                 }
                 catch (ex: Exception) {
+                    ex.printStackTrace()
                     close()
                 }
             }
@@ -147,6 +148,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                         }
                         catch (ex: Exception) {
                             close()
+                            throw ex
                         }
                     }
                 }

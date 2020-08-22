@@ -122,7 +122,7 @@ class Server internal constructor(val ip: String, val port: Int) {
     object AcceptCompletionHandler : CompletionHandler<AsynchronousSocketChannel, Continuation<Client>> {
 
         override fun completed(result: AsynchronousSocketChannel, attachment: Continuation<Client>) {
-            attachment.resume(Client(result, Netlius.byteBufferPool))
+            attachment.resume(Client(result, Netlius.serverByteBufferPool))
         }
 
         override fun failed(exc: Throwable, attachment: Continuation<Client>) {

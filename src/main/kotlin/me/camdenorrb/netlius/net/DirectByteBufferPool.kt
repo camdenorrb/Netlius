@@ -3,9 +3,9 @@ package me.camdenorrb.netlius.net
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentLinkedDeque
 
-class DirectByteBufferPool(initSize: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE) {
+class DirectByteBufferPool(size: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE) {
 
-    val byteBuffers = ConcurrentLinkedDeque(MutableList(initSize) {
+    val byteBuffers = ConcurrentLinkedDeque(MutableList(size) {
         ByteBuffer.allocateDirect(bufferSize)
     })
 
@@ -23,7 +23,7 @@ class DirectByteBufferPool(initSize: Int, val bufferSize: Int = DEFAULT_BUFFER_S
         block(byteBuffer)
         byteBuffer.clear()
 
-        if (byteBuffer.capacity() == bufferSize) {
+        if (byteBuffers.size < size && byteBuffer.capacity() == bufferSize) {
             byteBuffers.push(byteBuffer)
         }
     }
