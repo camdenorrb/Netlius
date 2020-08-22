@@ -8,7 +8,6 @@ import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.thread
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -16,8 +15,8 @@ import kotlin.coroutines.suspendCoroutine
 
 object Netlius {
 
-    // TODO: Use a ThreadPool coroutine context and it'll do this for you
-    private val threadPool = Executors.newCachedThreadPool().asCoroutineDispatcher()
+    internal val threadPoolDispatcher = Executors.newCachedThreadPool().asCoroutineDispatcher()
+
 
     fun client(ip: String, port: Int): Client {
 
@@ -45,7 +44,7 @@ object Netlius {
 
     fun stop() {
         try {
-            threadPool.close()
+            threadPoolDispatcher.close()
         }
         catch (ex: Exception) {
             // Ignored

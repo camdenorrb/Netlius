@@ -1,7 +1,6 @@
 package me.camdenorrb.netlius.net
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.camdenorrb.netlius.Netlius
 import java.net.InetSocketAddress
@@ -54,7 +53,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
         isRunning = true
 
-        CoroutineScope(Dispatchers.Default).launch {
+        CoroutineScope(Netlius.threadPoolDispatcher).launch {
 
             while (isRunning) {
 
@@ -62,7 +61,7 @@ class Server internal constructor(val ip: String, val port: Int) {
                     channel.accept(continuation, AcceptCompletionHandler)
                 }
 
-                CoroutineScope(Dispatchers.Default).launch {
+                CoroutineScope(Netlius.threadPoolDispatcher).launch {
                     try {
                         onConnectListeners.forEach { it(client) }
                     } catch (ex: Exception) {
