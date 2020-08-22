@@ -33,9 +33,14 @@ object Netlius {
 
         lateinit var channel: AsynchronousSocketChannel
 
-        suspendCoroutine<Unit> { continuation ->
-            channel = AsynchronousSocketChannel.open()
-            channel.connect(InetSocketAddress(ip, port), continuation, ClientCompletionHandler)
+        try {
+            suspendCoroutine<Unit> { continuation ->
+                channel = AsynchronousSocketChannel.open()
+                channel.connect(InetSocketAddress(ip, port), continuation, ClientCompletionHandler)
+            }
+        }
+        catch (ex: Exception) {
+            throw ex // Rethrow because coroutines..... :C
         }
 
         return Client(channel, byteBufferPool)
@@ -46,13 +51,7 @@ object Netlius {
     }
 
     fun stop() {
-        try {
-            threadPoolDispatcher.close()
-        }
-        catch (ex: Exception) {
-            ex.printStackTrace()
-            // Ignored
-        }
+        threadPoolDispatcher.close()
     }
 
     object ClientCompletionHandler : CompletionHandler<Void, Continuation<Unit>> {

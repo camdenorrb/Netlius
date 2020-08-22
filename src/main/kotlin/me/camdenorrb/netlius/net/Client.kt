@@ -25,15 +25,11 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
 
     val packetQueue = mutableListOf<Packet>()
 
+    val listeners = EnumMap<Event, MutableList<ClientListener>>(Event::class.java)
+
+
     var channel = channel
         private set
-
-    /*
-    var isClosing = false
-        private set
-    */
-
-    val listeners = EnumMap<Event, MutableList<ClientListener>>(Event::class.java)
 
 
     init {
@@ -64,14 +60,13 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                 println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
             }
 
-            suspendCoroutine<Unit> { continuation ->
-                try {
+            try {
+                suspendCoroutine<Unit> { continuation ->
                     channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
                 }
-                catch (ex: Exception) {
-                    ex.printStackTrace()
-                    close()
-                }
+            } catch (ex: Exception) {
+                close()
+                throw ex
             }
 
             if (IS_DEBUGGING) {
@@ -142,14 +137,14 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                     writeTask(byteBuffer)
                     byteBuffer.flip()
 
-                    suspendCoroutine<Unit> { continuation ->
-                        try {
+                    try {
+                        suspendCoroutine<Unit> { continuation ->
                             channel.write(byteBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
                         }
-                        catch (ex: Exception) {
-                            close()
-                            throw ex
-                        }
+                    }
+                    catch (ex: Exception) {
+                        close()
+                        throw ex
                     }
                 }
             }

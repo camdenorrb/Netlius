@@ -15,7 +15,7 @@ class DirectByteBufferPool(size: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE)
             ByteBuffer.allocateDirect(size)
         }
         else {
-            byteBuffers.poll() ?: ByteBuffer.allocateDirect(size).also { println("Here") }
+            byteBuffers.poll() ?: ByteBuffer.allocateDirect(size)
         }
 
         byteBuffer.limit(size)
@@ -25,13 +25,6 @@ class DirectByteBufferPool(size: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE)
         if (byteBuffers.size < size && byteBuffer.capacity() == bufferSize) {
             byteBuffers.push(byteBuffer)
         }
-    }
-
-
-    companion object {
-
-        const val DEFAULT_BUFFER_SIZE = 8_192
-
     }
 
 }

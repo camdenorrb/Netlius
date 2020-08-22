@@ -29,8 +29,6 @@ class Server internal constructor(val ip: String, val port: Int) {
 
     private var onConnectListeners = mutableListOf<suspend Client.() -> Unit>()
 
-    private var onDisconnectListeners = mutableListOf<Client.() -> Unit>()
-
 
     var isClosing = false
         private set
