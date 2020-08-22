@@ -10,8 +10,8 @@ class Benchmark {
     @Test
     fun `echo benchmark`() {
 
-        val server = Netlius.server("0.0.0.0", 12345)
-        val client = Netlius.client("0.0.0.0", 12345)
+        val server = Netlius.server("127.0.0.1", 12345)
+        val client = Netlius.client("127.0.0.1", 12345)
 
         val atomicTotalNS = atomic(0L)
 

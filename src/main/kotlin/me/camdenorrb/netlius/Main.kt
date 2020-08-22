@@ -21,7 +21,7 @@ object Main {
         var count = 0
 
         repeat(100) {
-            val client = Netlius.clientSuspended("127.0.0.1", 25565)
+            val client = Netlius.clientSuspending("127.0.0.1", 25565)
             client.queueAndFlush(Packet().string("Test${count++}"))
         }
 
