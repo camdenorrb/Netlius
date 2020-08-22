@@ -2,6 +2,7 @@ package me.camdenorrb.netlius
 
 import kotlinx.coroutines.asCoroutineDispatcher
 import me.camdenorrb.netlius.net.Client
+import me.camdenorrb.netlius.net.DirectByteBufferPool
 import me.camdenorrb.netlius.net.Server
 import java.net.InetSocketAddress
 import java.nio.channels.AsynchronousSocketChannel
@@ -15,6 +16,8 @@ import kotlin.coroutines.suspendCoroutine
 
 object Netlius {
 
+    internal val byteBufferPool = DirectByteBufferPool(10)
+
     internal val threadPoolDispatcher = Executors.newCachedThreadPool().asCoroutineDispatcher()
 
 
@@ -23,7 +26,7 @@ object Netlius {
         val channel = AsynchronousSocketChannel.open()
         channel.connect(InetSocketAddress(ip, port)).get(30, TimeUnit.SECONDS)
 
-        return Client(channel)
+        return Client(channel, byteBufferPool)
     }
 
     suspend fun clientSuspending(ip: String, port: Int): Client {
@@ -35,7 +38,7 @@ object Netlius {
             channel.connect(InetSocketAddress(ip, port), continuation, ClientCompletionHandler)
         }
 
-        return Client(channel)
+        return Client(channel, byteBufferPool)
     }
 
     fun server(ip: String, port: Int): Server {

@@ -2,6 +2,7 @@ package me.camdenorrb.netlius.net
 
 import java.nio.ByteBuffer
 
+// TODO: Add a way to add FileInputStream
 class Packet {
 
     @PublishedApi
@@ -11,7 +12,7 @@ class Packet {
     internal var isPrepending = false
 
     @PublishedApi
-    internal val writeQueue = mutableListOf<(ByteBuffer) -> Unit>()
+    internal val writeQueue = mutableListOf<WriteTask>()
 
 
     // Numbers
@@ -20,7 +21,7 @@ class Packet {
 
         size += Byte.SIZE_BYTES
 
-        return addWriteTask {
+        return addWriteTask(Byte.SIZE_BYTES) {
             it.put(byte)
         }
     }
@@ -29,7 +30,7 @@ class Packet {
 
         size += Short.SIZE_BYTES
 
-        return addWriteTask {
+        return addWriteTask(Short.SIZE_BYTES) {
             it.putShort(short)
         }
     }
@@ -38,7 +39,7 @@ class Packet {
 
         size += Int.SIZE_BYTES
 
-        return addWriteTask {
+        return addWriteTask(Int.SIZE_BYTES) {
             it.putInt(int)
         }
     }
@@ -47,7 +48,7 @@ class Packet {
 
         size += Long.SIZE_BYTES
 
-        return addWriteTask {
+        return addWriteTask(Long.SIZE_BYTES) {
             it.putLong(long)
         }
     }
@@ -57,7 +58,7 @@ class Packet {
 
         size += Float.SIZE_BYTES
 
-        return addWriteTask {
+        return addWriteTask(Float.SIZE_BYTES) {
             it.putFloat(float)
         }
     }
@@ -66,19 +67,19 @@ class Packet {
 
         size += Double.SIZE_BYTES
 
-        return addWriteTask {
+        return addWriteTask(Double.SIZE_BYTES) {
             it.putDouble(double)
         }
     }
 
 
-    fun addWriteTask(task: (ByteBuffer) -> Unit): Packet {
+    fun addWriteTask(size: Int, block: (ByteBuffer) -> Unit): Packet {
 
         if (isPrepending) {
-            writeQueue.add(0, task)
+            writeQueue.add(0, WriteTask(size, block))
         }
         else {
-            writeQueue.add(task)
+            writeQueue.add(WriteTask(size, block))
         }
 
         return this
@@ -94,24 +95,10 @@ class Packet {
 
         short(size.toShort())
 
-        return addWriteTask {
+        return addWriteTask(bytes.size) {
             it.put(bytes)
         }
     }
-
-
-    suspend inline fun compile(block: (ByteBuffer) -> Unit) {
-
-        val byteBuffer = DirectByteBufferPool.take(size)
-
-        writeQueue.forEach {
-            it(byteBuffer)
-        }
-
-        block(byteBuffer)
-        DirectByteBufferPool.give(byteBuffer)
-    }
-
 
     inline fun prepend(block: Packet.() -> Unit): Packet {
 
@@ -121,6 +108,16 @@ class Packet {
 
         return this
     }
+
+
+    class WriteTask(val size: Int, val block: (ByteBuffer) -> Unit) {
+
+        operator fun invoke(byteBuffer: ByteBuffer) {
+            block(byteBuffer)
+        }
+
+    }
+
 
 
     // Extension function for varint in the actual MCServer impl

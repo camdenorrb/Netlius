@@ -1,51 +1,38 @@
 package me.camdenorrb.netlius.net
 
 import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.ConcurrentLinkedDeque
 
-/*
-    Make a couple 8MB DirectByteBuffers and reuse it until all the data is written then return.
-*/
-object DirectByteBufferPool {
+class DirectByteBufferPool(initSize: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE) {
 
-    // Sorted by lowest -> highest
-    //val byteBuffers = ConcurrentSkipListMap<Int, ConcurrentLinkedQueue<ByteBuffer>>()
+    val byteBuffers = ConcurrentLinkedDeque(MutableList(initSize) {
+        ByteBuffer.allocateDirect(bufferSize)
+    })
 
 
-    fun take(size: Int): ByteBuffer {
-        return ByteBuffer.allocateDirect(size)
+    inline fun take(size: Int = DEFAULT_BUFFER_SIZE, block: (ByteBuffer) -> Unit) {
 
-        /*
-        return try {
-
-            val entry = byteBuffers.ceilingEntry(size)
-
-            if (entry.value.size == 1) {
-                byteBuffers.remove(entry.key)
-            }
-
-            entry.value.remove().limit(size)
+        val byteBuffer = if (size > bufferSize) {
+            ByteBuffer.allocateDirect(size)
         }
-        catch (ex: Exception) {
-
-            when (ex) {
-
-                is NoSuchElementException -> {
-                    ByteBuffer.allocateDirect(size)
-                }
-
-                else -> throw ex
-            }
+        else {
+            byteBuffers.poll() ?: ByteBuffer.allocateDirect(size)
         }
-        */
+
+        byteBuffer.limit(size)
+        block(byteBuffer)
+        byteBuffer.clear()
+
+        if (byteBuffer.capacity() == bufferSize) {
+            byteBuffers.push(byteBuffer)
+        }
     }
 
-    fun give(byteBuffer: ByteBuffer) {
-        /*
-        byteBuffer.clear()
-        byteBuffers.getOrPut(byteBuffer.remaining(), { ConcurrentLinkedQueue() }).add(byteBuffer)
-        */
+
+    companion object {
+
+        const val DEFAULT_BUFFER_SIZE = 8_192
+
     }
 
 }

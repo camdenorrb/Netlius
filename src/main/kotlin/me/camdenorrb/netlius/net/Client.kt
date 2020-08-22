@@ -2,6 +2,7 @@ package me.camdenorrb.netlius.net
 
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
 import me.camdenorrb.netlius.Netlius
 import java.net.StandardSocketOptions
 import java.nio.BufferUnderflowException
@@ -20,7 +21,7 @@ import kotlin.jvm.Throws
 
 typealias ClientListener = (Client) -> Unit
 
-class Client internal constructor(channel: AsynchronousSocketChannel) {
+class Client internal constructor(channel: AsynchronousSocketChannel, val byteBufferPool: DirectByteBufferPool) {
 
     val packetQueue = mutableListOf<Packet>()
 
@@ -53,33 +54,35 @@ class Client internal constructor(channel: AsynchronousSocketChannel) {
 
     //This seems to cause issues
     // TODO: Check for InterruptedByTimeoutException and disconnect if so
-    suspend inline fun <T> read(size: Int, block: ByteBuffer.() -> T): T {
+    suspend inline fun <T : Any> read(size: Int, block: ByteBuffer.() -> T): T {
 
-        val byteBuffer = DirectByteBufferPool.take(size)
+        lateinit var value: T
+
+        byteBufferPool.take(size) { byteBuffer ->
+
+            if (IS_DEBUGGING) {
+                println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
+            }
+
+            suspendCoroutine<Unit> { continuation ->
+                try {
+                    channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
+                }
+                catch (ex: Exception) {
+                    close()
+                }
+            }
+
+            if (IS_DEBUGGING) {
+                println("Read: $size bytes")
+            }
+
+            byteBuffer.flip()
+
+            value = block(byteBuffer)
+        }
 
         //println("Size: $size, Capacity: ${byteBuffer.capacity()}, IsReadOnly: ${byteBuffer.isReadOnly}, IsDirect: ${byteBuffer.isDirect}, Order: ${byteBuffer.order()}, Limit: ${byteBuffer.limit()}, Position: ${byteBuffer.position()} Remaining: ${byteBuffer.remaining()}, HasRemaining: ${byteBuffer.hasRemaining()}}")
-
-        if (IS_DEBUGGING) {
-            println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
-        }
-
-        suspendCoroutine<Unit> { continuation ->
-            try {
-                channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
-            }
-            catch (ex: Exception) {
-                close()
-            }
-        }
-
-        if (IS_DEBUGGING) {
-            println("Read: $size bytes")
-        }
-
-        byteBuffer.flip()
-
-        val value = block(byteBuffer)
-        DirectByteBufferPool.give(byteBuffer)
 
         return value
     }
@@ -131,31 +134,24 @@ class Client internal constructor(channel: AsynchronousSocketChannel) {
     }
 
     suspend fun flush() {
-
-        var bytes = 0
-
         packetQueue.clearingForEach { packet ->
-            packet.compile {
+            packet.writeQueue.forEach { writeTask ->
+                byteBufferPool.take(writeTask.size) { byteBuffer ->
 
-                it.flip()
-                bytes += it.remaining()
+                    writeTask(byteBuffer)
+                    byteBuffer.flip()
 
-                suspendCoroutine<Unit> { continuation ->
-                    try {
-                        channel.write(it, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
-                    }
-                    catch (ex: Exception) {
-                        close()
+                    suspendCoroutine<Unit> { continuation ->
+                        try {
+                            channel.write(byteBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
+                        }
+                        catch (ex: Exception) {
+                            close()
+                        }
                     }
                 }
             }
-
         }
-
-        if (IS_DEBUGGING) {
-            println("Wrote: $bytes bytes")
-        }
-
     }
 
 
