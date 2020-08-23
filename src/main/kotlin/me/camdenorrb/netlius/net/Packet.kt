@@ -1,6 +1,8 @@
 package me.camdenorrb.netlius.net
 
 import java.nio.ByteBuffer
+import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.ConcurrentLinkedQueue
 
 // TODO: Add a way to add FileInputStream - No, just use multiple packets
 class Packet {
@@ -12,10 +14,10 @@ class Packet {
     internal var isPrepending = false
 
     @PublishedApi
-    internal var prependingIndex = 0
+    internal val writeQueue = ConcurrentLinkedQueue<WriteTask>()
 
     @PublishedApi
-    internal val writeQueue = mutableListOf<WriteTask>()
+    internal val prependWriteQueue = ConcurrentLinkedQueue<WriteTask>()
 
 
     // Numbers
@@ -26,6 +28,15 @@ class Packet {
 
         return addWriteTask(Byte.SIZE_BYTES) {
             it.put(byte)
+        }
+    }
+
+    fun bytes(bytes: ByteArray): Packet {
+
+        size += bytes.size * Byte.SIZE_BYTES
+
+        return addWriteTask(bytes.size * Byte.SIZE_BYTES) {
+            it.put(bytes)
         }
     }
 
@@ -79,7 +90,7 @@ class Packet {
     fun addWriteTask(size: Int, block: (ByteBuffer) -> Unit): Packet {
 
         if (isPrepending) {
-            writeQueue.add(prependingIndex++, WriteTask(size, block))
+            prependWriteQueue.add(WriteTask(size, block))
         }
         else {
             writeQueue.add(WriteTask(size, block))
@@ -97,10 +108,7 @@ class Packet {
         size += bytes.size
 
         short(bytes.size.toShort())
-
-        return addWriteTask(bytes.size) {
-            it.put(bytes)
-        }
+        return bytes(bytes)
     }
 
     inline fun prepend(block: Packet.() -> Unit): Packet {
@@ -108,8 +116,6 @@ class Packet {
         isPrepending = true
         block()
         isPrepending = false
-
-        prependingIndex = 0
 
         return this
     }

@@ -12,13 +12,33 @@ import kotlin.test.assertEquals
 class ClientTest {
 
     @Test
+    fun `client single message test`() {
+
+        val server = Netlius.server("127.0.0.1", 25565)
+
+        server.onConnect {
+            while (channel.isOpen) {
+                println(readString())
+            }
+        }
+
+        val client = Netlius.client("127.0.0.1", 25565)
+        val packet = Packet().string("Meow")
+
+        runBlocking {
+            client.queueAndFlush(packet)
+            delay(10000)
+        }
+    }
+
+    @Test
     fun `client multipart message test`() {
 
         val server = Netlius.server("127.0.0.1", 25565)
 
         server.onConnect {
             while (channel.isOpen) {
-                println("${readString()}${readString()}")
+                assertEquals("${readString()}${readString()}", "12")
             }
         }
 
@@ -30,6 +50,31 @@ class ClientTest {
             delay(10000)
         }
     }
+
+    @Test
+    fun `client prepend message test`() {
+
+        val server = Netlius.server("127.0.0.1", 25565)
+
+        server.onConnect {
+            while (channel.isOpen) {
+                println("Thing: ${readString()}")
+            }
+        }
+
+        val client = Netlius.client("127.0.0.1", 25565)
+
+        val packet = Packet().string("3").prepend {
+            string("1")
+            string("2")
+        }
+
+        runBlocking {
+            client.queueAndFlush(packet)
+            delay(10000)
+        }
+    }
+
 
     @Test
     fun `attack of the clients part 2 season 4`() = runBlocking {

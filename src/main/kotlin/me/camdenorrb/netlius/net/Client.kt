@@ -80,12 +80,22 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
 
         //println("Size: $size, Capacity: ${byteBuffer.capacity()}, IsReadOnly: ${byteBuffer.isReadOnly}, IsDirect: ${byteBuffer.isDirect}, Order: ${byteBuffer.order()}, Limit: ${byteBuffer.limit()}, Position: ${byteBuffer.position()} Remaining: ${byteBuffer.remaining()}, HasRemaining: ${byteBuffer.hasRemaining()}}")
 
+        //println(value)
         return value
     }
 
     suspend fun readByte(): Byte {
         return read(Byte.SIZE_BYTES) { get() }
     }
+
+    suspend fun readBytes(n: Int): ByteArray {
+        return read(n * Byte.SIZE_BYTES) {
+            ByteArray(n) {
+                get(it)
+            }
+        }
+    }
+
 
     suspend fun readShort(): Short {
         return read(Short.SIZE_BYTES) { short }
@@ -109,15 +119,8 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
 
 
     suspend fun readString(): String {
-
         val size = readShort().toInt()
-        val data = ByteArray(size)
-
-        read(size) {
-            get(data)
-        }
-
-        return data.decodeToString()
+        return readBytes(size).decodeToString()
     }
 
     fun queue(vararg packets: Packet) {
@@ -132,6 +135,10 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     suspend fun flush() {
         packetQueue.clearingForEach { packet ->
             byteBufferPool.take(packet.size) { byteBuffer ->
+
+                packet.prependWriteQueue.forEach { writeTask ->
+                    writeTask(byteBuffer)
+                }
 
                 packet.writeQueue.forEach { writeTask ->
                     writeTask(byteBuffer)
@@ -159,7 +166,6 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
         listeners[Event.DISCONNECT]?.clearingForEach {
             it.invoke(this)
         }
-
 
         channel.close()
     }

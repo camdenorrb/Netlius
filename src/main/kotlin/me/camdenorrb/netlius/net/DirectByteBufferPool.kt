@@ -21,7 +21,7 @@ class DirectByteBufferPool(size: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE)
 
         // Try + Finally so the buffer gets returned even with error
         try {
-            block(byteBuffer.clear().limit(size))
+            block(byteBuffer.limit(size))
         }
         finally {
 

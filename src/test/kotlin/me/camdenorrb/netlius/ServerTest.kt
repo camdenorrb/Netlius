@@ -57,16 +57,19 @@ class ServerTest {
             return this
         }
 
+        fun Packet.mcString(value: String): Packet {
+
+            val stringBytes = value.encodeToByteArray()
+
+            varInt(stringBytes.size)
+            bytes(stringBytes)
+
+            return this
+        }
+
         suspend fun Client.readMCString(): String {
-
             val size = readVarInt()
-            val data = ByteArray(size)
-
-            read(size) {
-                get(0, data)
-            }
-
-            return data.decodeToString()
+            return readBytes(size).decodeToString()
         }
 
 
@@ -90,12 +93,12 @@ class ServerTest {
                     val serverPort = client.readShort()
                     val nextState = client.readVarInt()
 
-                    val handshakePacket = Packet().string(
+                    val handshakePacket = Packet().mcString(
                         """
                             {
                                 "version": {
-                                    "name": "1.0000.10000.1000",
-                                    "protocol": $protocolVersion
+                                    "name": "1.15.2",
+                                    "protocol": 578
                                 },
                                 "players": {
                                     "max": 100,
@@ -113,17 +116,13 @@ class ServerTest {
                             }
                         """.trimIndent()
                     ).prepend {
+                        varInt(size + 1)
                         varInt(0x00)
-                        varInt(size)
                     }
 
-                    println(handshakePacket.writeQueue.joinToString("\n"))
-
-                    client.queueAndFlush(handshakePacket)
-
-                    println("Here")
                     // Read blank request packet
                     client.readMCPacketHeader()
+                    client.queueAndFlush(handshakePacket)
 
                     val pingPacketHeader = client.readMCPacketHeader()
 
@@ -132,11 +131,12 @@ class ServerTest {
                     }
 
                     val pingPacket = Packet().long(client.readLong()).prepend {
+                        varInt(size + 1)
                         varInt(0x01)
-                        varInt(size)
                     }
 
                     client.queueAndFlush(pingPacket)
+                    client.close()
                 }
 
             }
