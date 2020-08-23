@@ -73,7 +73,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                 println("Read: $size bytes")
             }
 
-            byteBuffer.flip()
+            byteBuffer.position(0)
 
             value = block(byteBuffer)
         }
@@ -114,7 +114,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
         val data = ByteArray(size)
 
         read(size) {
-            get(0, data)
+            get(data)
         }
 
         return data.decodeToString()
@@ -131,21 +131,22 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
 
     suspend fun flush() {
         packetQueue.clearingForEach { packet ->
-            packet.writeQueue.forEach { writeTask ->
-                byteBufferPool.take(writeTask.size) { byteBuffer ->
+            byteBufferPool.take(packet.size) { byteBuffer ->
 
+                packet.writeQueue.forEach { writeTask ->
                     writeTask(byteBuffer)
-                    byteBuffer.flip()
+                }
 
-                    try {
-                        suspendCoroutine<Unit> { continuation ->
-                            channel.write(byteBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
-                        }
+                byteBuffer.flip()
+
+                try {
+                    suspendCoroutine<Unit> { continuation ->
+                        channel.write(byteBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
                     }
-                    catch (ex: Exception) {
-                        close()
-                        throw ex
-                    }
+                }
+                catch (ex: Exception) {
+                    close()
+                    throw ex
                 }
             }
         }
@@ -158,6 +159,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
         listeners[Event.DISCONNECT]?.clearingForEach {
             it.invoke(this)
         }
+
 
         channel.close()
     }

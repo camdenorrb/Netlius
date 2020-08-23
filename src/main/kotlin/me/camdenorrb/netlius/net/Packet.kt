@@ -2,7 +2,7 @@ package me.camdenorrb.netlius.net
 
 import java.nio.ByteBuffer
 
-// TODO: Add a way to add FileInputStream
+// TODO: Add a way to add FileInputStream - No, just use multiple packets
 class Packet {
 
     @PublishedApi
@@ -10,6 +10,9 @@ class Packet {
 
     @PublishedApi
     internal var isPrepending = false
+
+    @PublishedApi
+    internal var prependingIndex = 0
 
     @PublishedApi
     internal val writeQueue = mutableListOf<WriteTask>()
@@ -76,7 +79,7 @@ class Packet {
     fun addWriteTask(size: Int, block: (ByteBuffer) -> Unit): Packet {
 
         if (isPrepending) {
-            writeQueue.add(0, WriteTask(size, block))
+            writeQueue.add(prependingIndex++, WriteTask(size, block))
         }
         else {
             writeQueue.add(WriteTask(size, block))
@@ -93,7 +96,7 @@ class Packet {
         val bytes = string.encodeToByteArray()
         size += bytes.size
 
-        short(size.toShort())
+        short(bytes.size.toShort())
 
         return addWriteTask(bytes.size) {
             it.put(bytes)
@@ -106,11 +109,13 @@ class Packet {
         block()
         isPrepending = false
 
+        prependingIndex = 0
+
         return this
     }
 
 
-    class WriteTask(val size: Int, val block: (ByteBuffer) -> Unit) {
+    data class WriteTask(val size: Int, val block: (ByteBuffer) -> Unit) {
 
         operator fun invoke(byteBuffer: ByteBuffer) {
             block(byteBuffer)

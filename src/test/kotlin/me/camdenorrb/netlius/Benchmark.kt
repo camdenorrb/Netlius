@@ -3,6 +3,8 @@ package me.camdenorrb.netlius
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.runBlocking
 import me.camdenorrb.netlius.net.Packet
+import kotlin.math.max
+import kotlin.system.measureNanoTime
 import kotlin.test.Test
 
 class Benchmark {
@@ -13,21 +15,29 @@ class Benchmark {
         val server = Netlius.server("127.0.0.1", 12345)
         val client = Netlius.client("127.0.0.1", 12345)
 
-        val atomicTotalNS = atomic(0L)
+        val serverTimeMS = atomic(0L)
+        val clientTimeMS = atomic(0L)
 
         server.onConnect {
             repeat(DEFAULT_CYCLES) {
-                atomicTotalNS += System.nanoTime() - readLong()
+                serverTimeMS += measureNanoTime {
+                    readByte()
+                }
             }
         }
 
         runBlocking {
+
+            val packet = Packet().byte(0)
+
             repeat(DEFAULT_CYCLES) {
-                client.queueAndFlush(Packet().long(System.nanoTime()))
+                clientTimeMS += measureNanoTime {
+                    client.queueAndFlush(packet)
+                }
             }
         }
 
-        val averageNS = atomicTotalNS.value / DEFAULT_CYCLES
+        val averageNS = max(clientTimeMS.value, serverTimeMS.value) / DEFAULT_CYCLES
         println("$averageNS nanoseconds per call")
     }
 

@@ -7,8 +7,29 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import me.camdenorrb.netlius.net.Packet
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class ClientTest {
+
+    @Test
+    fun `client multipart message test`() {
+
+        val server = Netlius.server("127.0.0.1", 25565)
+
+        server.onConnect {
+            while (channel.isOpen) {
+                println("${readString()}${readString()}")
+            }
+        }
+
+        val client = Netlius.client("127.0.0.1", 25565)
+        val packet = Packet().string("1").string("2")
+
+        runBlocking {
+            client.queueAndFlush(packet)
+            delay(10000)
+        }
+    }
 
     @Test
     fun `attack of the clients part 2 season 4`() = runBlocking {
@@ -17,7 +38,7 @@ class ClientTest {
 
         server.onConnect {
             while (channel.isOpen) {
-                println(readString())
+                println("${readString()}:${readString()}")
             }
         }
 
@@ -26,21 +47,16 @@ class ClientTest {
         (0..100).map {
             async(Netlius.threadPoolDispatcher) {
                 val client = Netlius.clientSuspending("127.0.0.1", 25565)
-                client.queueAndFlush(Packet().string("Test${count.getAndAdd(1)}"))
+                client.queueAndFlush(Packet().string("Meow").string("Test${count.getAndAdd(1)}"))
             }
         }.awaitAll()
 
+        delay(2000)
 
-        //println(DirectByteBufferPool.byteBuffers.firstEntry().value.size)
-
-        delay(1000)
-
-
-        assert(count.value == 101)
+        assertEquals(count.value, 101)
 
         server.stop()
         Netlius.stop()
-
     }
 
     // Takes 30 seconds to run due to timeout
