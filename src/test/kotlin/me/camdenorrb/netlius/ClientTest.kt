@@ -1,10 +1,7 @@
 package me.camdenorrb.netlius
 
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import me.camdenorrb.netlius.net.Packet
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -55,10 +52,12 @@ class ClientTest {
     fun `client prepend message test`() {
 
         val server = Netlius.server("127.0.0.1", 25565)
+        var succeeded = false
 
         server.onConnect {
             while (channel.isOpen) {
-                println("Thing: ${readString()}")
+                assertEquals("${readString()}${readString()}${readString()}", "123")
+                succeeded = true
             }
         }
 
@@ -71,8 +70,11 @@ class ClientTest {
 
         runBlocking {
             client.queueAndFlush(packet)
+            // TODO: Figure out a way to make this delay not needed
             delay(10000)
         }
+
+        assert(succeeded)
     }
 
 
@@ -89,16 +91,14 @@ class ClientTest {
 
         val count = atomic(0)
 
-        (0..100).map {
-            async(Netlius.threadPoolDispatcher) {
+        (1..1_000).map {
+            async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
                 val client = Netlius.clientSuspending("127.0.0.1", 25565)
                 client.queueAndFlush(Packet().string("Meow").string("Test${count.getAndAdd(1)}"))
             }
         }.awaitAll()
 
-        delay(2000)
-
-        assertEquals(count.value, 101)
+        assertEquals(count.value, 1_000)
 
         server.stop()
         Netlius.stop()
@@ -110,6 +110,10 @@ class ClientTest {
 
         val server = Netlius.server("127.0.0.1", 12345)
         val client = Netlius.client("127.0.0.1", 12345)
+
+        client.onDisconnect {
+            println("Disconnected :D")
+        }
 
         server.stop()
 

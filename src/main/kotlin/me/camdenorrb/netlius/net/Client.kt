@@ -1,26 +1,24 @@
 package me.camdenorrb.netlius.net
 
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.runBlocking
-import me.camdenorrb.netlius.Netlius
 import java.net.StandardSocketOptions
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.AsynchronousSocketChannel
-import java.nio.channels.ClosedChannelException
 import java.nio.channels.CompletionHandler
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.*
-import kotlin.jvm.Throws
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 // https://www.baeldung.com/java-nio2-async-socket-channel
 // TODO: Use a different coroutine for writing and reading
 
 typealias ClientListener = (Client) -> Unit
 
+// TODO: Implement compression
 class Client internal constructor(channel: AsynchronousSocketChannel, val byteBufferPool: DirectByteBufferPool) {
 
     val packetQueue = mutableListOf<Packet>()
@@ -96,6 +94,15 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
         }
     }
 
+    suspend fun readBoolean(): Boolean {
+        return when (val read = readByte().toInt()) {
+
+            1 -> true
+            2 -> false
+
+            else -> error("Unable to readBoolean '$read'")
+        }
+    }
 
     suspend fun readShort(): Short {
         return read(Short.SIZE_BYTES) { short }
@@ -135,10 +142,6 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     suspend fun flush() {
         packetQueue.clearingForEach { packet ->
             byteBufferPool.take(packet.size) { byteBuffer ->
-
-                packet.prependWriteQueue.forEach { writeTask ->
-                    writeTask(byteBuffer)
-                }
 
                 packet.writeQueue.forEach { writeTask ->
                     writeTask(byteBuffer)

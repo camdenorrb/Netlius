@@ -16,6 +16,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+// TODO: Make a class which takes in the bytebufferpool size, bytebufferpool, threadpool, etc
 object Netlius {
 
     val byteBufferPool = DirectByteBufferPool(10)
@@ -48,8 +49,8 @@ object Netlius {
         return Client(channel, byteBufferPool)
     }
 
-    fun server(ip: String, port: Int): Server {
-        return Server(ip, port).apply { start() }
+    fun server(ip: String, port: Int, autoStart: Boolean = true): Server {
+        return Server(ip, port).apply { if (autoStart) start() }
     }
 
     fun stop() {

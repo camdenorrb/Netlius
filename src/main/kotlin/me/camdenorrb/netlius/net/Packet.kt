@@ -1,40 +1,38 @@
 package me.camdenorrb.netlius.net
 
 import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.ConcurrentLinkedQueue
 
 // TODO: Add a way to add FileInputStream - No, just use multiple packets
 class Packet {
 
-    @PublishedApi
-    internal var size = 0
+    var size = 0
+        private set
 
     @PublishedApi
     internal var isPrepending = false
 
     @PublishedApi
-    internal val writeQueue = ConcurrentLinkedQueue<WriteTask>()
+    internal val writeQueue = mutableListOf<WriteTask>()
 
     @PublishedApi
-    internal val prependWriteQueue = ConcurrentLinkedQueue<WriteTask>()
+    internal val prependWriteQueue = mutableListOf<WriteTask>()
 
 
     // Numbers
 
     fun byte(byte: Byte): Packet {
 
-        size += Byte.SIZE_BYTES
-
         return addWriteTask(Byte.SIZE_BYTES) {
             it.put(byte)
         }
     }
 
+    fun boolean(boolean: Boolean): Packet {
+        return byte(if (boolean) 1 else 0)
+    }
+
     fun bytes(bytes: ByteArray): Packet {
-
-        size += bytes.size * Byte.SIZE_BYTES
-
         return addWriteTask(bytes.size * Byte.SIZE_BYTES) {
             it.put(bytes)
         }
@@ -42,26 +40,18 @@ class Packet {
 
     fun short(short: Short): Packet {
 
-        size += Short.SIZE_BYTES
-
         return addWriteTask(Short.SIZE_BYTES) {
             it.putShort(short)
         }
     }
 
     fun int(int: Int): Packet {
-
-        size += Int.SIZE_BYTES
-
         return addWriteTask(Int.SIZE_BYTES) {
             it.putInt(int)
         }
     }
 
     fun long(long: Long): Packet {
-
-        size += Long.SIZE_BYTES
-
         return addWriteTask(Long.SIZE_BYTES) {
             it.putLong(long)
         }
@@ -69,18 +59,12 @@ class Packet {
 
 
     fun float(float: Float): Packet {
-
-        size += Float.SIZE_BYTES
-
         return addWriteTask(Float.SIZE_BYTES) {
             it.putFloat(float)
         }
     }
 
     fun double(double: Double): Packet {
-
-        size += Double.SIZE_BYTES
-
         return addWriteTask(Double.SIZE_BYTES) {
             it.putDouble(double)
         }
@@ -88,6 +72,8 @@ class Packet {
 
 
     fun addWriteTask(size: Int, block: (ByteBuffer) -> Unit): Packet {
+
+        this.size += size
 
         if (isPrepending) {
             prependWriteQueue.add(WriteTask(size, block))
@@ -116,6 +102,9 @@ class Packet {
         isPrepending = true
         block()
         isPrepending = false
+
+        writeQueue.addAll(0, prependWriteQueue)
+        prependWriteQueue.clear()
 
         return this
     }

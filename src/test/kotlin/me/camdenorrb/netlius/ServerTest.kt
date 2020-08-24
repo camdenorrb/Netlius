@@ -116,8 +116,9 @@ class ServerTest {
                             }
                         """.trimIndent()
                     ).prepend {
-                        varInt(size + 1)
                         varInt(0x00)
+                    }.prepend {
+                        varInt(size)
                     }
 
                     // Read blank request packet
@@ -131,8 +132,9 @@ class ServerTest {
                     }
 
                     val pingPacket = Packet().long(client.readLong()).prepend {
-                        varInt(size + 1)
                         varInt(0x01)
+                    }.prepend {
+                        varInt(size)
                     }
 
                     client.queueAndFlush(pingPacket)
@@ -152,7 +154,6 @@ class ServerTest {
         while (true) {
             Thread.onSpinWait()
         }
-
 
     }
 
