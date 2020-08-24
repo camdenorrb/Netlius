@@ -1,7 +1,6 @@
 package me.camdenorrb.netlius.net
 
 import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentLinkedQueue
 
 // TODO: Add a way to add FileInputStream - No, just use multiple packets
 class Packet {
@@ -39,7 +38,6 @@ class Packet {
     }
 
     fun short(short: Short): Packet {
-
         return addWriteTask(Short.SIZE_BYTES) {
             it.putShort(short)
         }

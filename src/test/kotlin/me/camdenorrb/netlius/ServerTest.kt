@@ -2,6 +2,8 @@ package me.camdenorrb.netlius
 
 import me.camdenorrb.netlius.net.Client
 import me.camdenorrb.netlius.net.Packet
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 
 class ServerTest {
@@ -151,10 +153,8 @@ class ServerTest {
             }
         }
 
-        while (true) {
-            Thread.onSpinWait()
-        }
-
+        // TODO: Make a test like this that makes sure it waited 1 minute before terminating
+        (Netlius.threadPoolDispatcher.executor as ExecutorService).awaitTermination(1, TimeUnit.MINUTES)
     }
 
 }

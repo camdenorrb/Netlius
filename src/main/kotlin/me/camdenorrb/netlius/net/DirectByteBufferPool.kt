@@ -1,11 +1,11 @@
 package me.camdenorrb.netlius.net
 
 import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class DirectByteBufferPool(size: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE) {
 
-    val byteBuffers = ConcurrentLinkedDeque(MutableList(size) {
+    val byteBuffers = ConcurrentLinkedQueue(List(size) {
         ByteBuffer.allocateDirect(bufferSize)
     })
 
@@ -28,7 +28,7 @@ class DirectByteBufferPool(size: Int, val bufferSize: Int = DEFAULT_BUFFER_SIZE)
             byteBuffer.clear()
 
             if (byteBuffers.size < size && byteBuffer.capacity() == bufferSize) {
-                byteBuffers.push(byteBuffer)
+                byteBuffers.add(byteBuffer)
             }
         }
     }

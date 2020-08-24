@@ -1,6 +1,7 @@
 package me.camdenorrb.netlius.net
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import me.camdenorrb.netlius.Netlius
 import java.net.InetSocketAddress
@@ -8,6 +9,7 @@ import java.net.StandardSocketOptions
 import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -20,7 +22,7 @@ import kotlin.coroutines.suspendCoroutine
 // TODO: Add readTimeouts
 class Server internal constructor(val ip: String, val port: Int) {
 
-    val clients = mutableListOf<Client>()
+    val clients = ConcurrentLinkedQueue<Client>()
 
 
     private var onStartListeners = mutableListOf<Server.() -> Unit>()
@@ -47,7 +49,7 @@ class Server internal constructor(val ip: String, val port: Int) {
         }
 
         channel = AsynchronousServerSocketChannel.open().bind(InetSocketAddress(ip, port))
-        channel.setOption(StandardSocketOptions.SO_RCVBUF, BUFFER_SIZE)
+        channel.setOption(StandardSocketOptions.SO_RCVBUF, DEFAULT_BUFFER_SIZE)
 
         isRunning = true
 
@@ -59,7 +61,7 @@ class Server internal constructor(val ip: String, val port: Int) {
                     channel.accept(continuation, AcceptCompletionHandler)
                 }
 
-                CoroutineScope(Netlius.threadPoolDispatcher).launch {
+                launch(Netlius.threadPoolDispatcher) {
                     try {
                         onConnectListeners.forEach { it(client) }
                     } catch (ex: Exception) {
@@ -110,9 +112,6 @@ class Server internal constructor(val ip: String, val port: Int) {
 
 
     companion object {
-
-        // Might want to rename to DEFAULT_BUFFER_SIZE and move to Netlius
-        const val BUFFER_SIZE = 8_192
 
         const val IS_DEBUGGING = false
 

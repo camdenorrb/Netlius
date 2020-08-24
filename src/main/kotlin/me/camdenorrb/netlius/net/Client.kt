@@ -7,6 +7,7 @@ import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -21,7 +22,7 @@ typealias ClientListener = (Client) -> Unit
 // TODO: Implement compression
 class Client internal constructor(channel: AsynchronousSocketChannel, val byteBufferPool: DirectByteBufferPool) {
 
-    val packetQueue = mutableListOf<Packet>()
+    val packetQueue = ConcurrentLinkedQueue<Packet>()
 
     val listeners = EnumMap<Event, MutableList<ClientListener>>(Event::class.java)
 
@@ -100,7 +101,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
             1 -> true
             2 -> false
 
-            else -> error("Unable to readBoolean '$read'")
+            else -> error("Unable to read boolean '$read'")
         }
     }
 
