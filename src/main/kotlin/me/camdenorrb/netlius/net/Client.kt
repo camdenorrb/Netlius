@@ -1,6 +1,7 @@
 package me.camdenorrb.netlius.net
 
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.sync.Mutex
 import me.camdenorrb.netlius.Netlius
 import java.io.EOFException
 import java.net.StandardSocketOptions
@@ -27,6 +28,11 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     val listeners = EnumMap<Event, MutableList<ClientListener>>(Event::class.java)
 
 
+    val readLock = Mutex()
+
+    val writeLock = Mutex()
+
+
     var channel = channel
         private set
 
@@ -51,6 +57,8 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     // TODO: Check for InterruptedByTimeoutException and disconnect if so
     suspend inline fun <T : Any> read(size: Int, block: ByteBuffer.() -> T): T {
 
+        readLock.lock()
+
         byteBufferPool.take(size) { byteBuffer ->
 
             if (IS_DEBUGGING) {
@@ -67,6 +75,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                     println("Read: $size bytes")
                 }
 
+                readLock.unlock()
                 return block(byteBuffer.flip())
             }
             catch (ex: Exception) {
@@ -135,6 +144,9 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     }
 
     suspend fun flush() {
+
+        writeLock.lock()
+
         packetQueue.clearingForEach { packet ->
             byteBufferPool.take(packet.size) { byteBuffer ->
 
@@ -155,6 +167,8 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                 }
             }
         }
+
+        writeLock.unlock()
     }
 
 
@@ -184,6 +198,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     object ReadCompletionHandler : CompletionHandler<Int, Continuation<Unit>> {
 
         override fun completed(result: Int, attachment: Continuation<Unit>) {
+
 
             if (result == -1) {
                 attachment.resumeWithException(EOFException())

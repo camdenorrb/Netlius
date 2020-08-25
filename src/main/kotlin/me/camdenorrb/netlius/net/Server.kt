@@ -95,6 +95,8 @@ class Server internal constructor(val ip: String, val port: Int) {
         onStopListeners.forEach { it(this) }
         clients.clearingForEach(Client::close)
 
+        channel.close()
+
         isRunning = false
     }
 

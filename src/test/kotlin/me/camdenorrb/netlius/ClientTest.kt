@@ -2,9 +2,10 @@ package me.camdenorrb.netlius
 
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
-import me.camdenorrb.netlius.net.DirectByteBufferPool
 import me.camdenorrb.netlius.net.Packet
+import kotlin.system.exitProcess
 import kotlin.system.measureNanoTime
+import kotlin.system.measureTimeMillis
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -31,16 +32,39 @@ class ClientTest {
     }
 
     @Test
-    fun `client server speedtest`() {
+    fun `client to server local throughput speedtest`() {
 
         val server = Netlius.server("127.0.0.1", 25565)
-        val client = Netlius.client("127.0.0.1", 25565)
+        val bytesRead = atomic(0L)
+        val bufferSizeAsLong = Netlius.DEFAULT_BUFFER_SIZE.toLong()
 
-        val packet = Packet().bytes(ByteArray(Netlius.DEFAULT_BUFFER_SIZE) { 1 })
+        server.onConnect {
+            while (true) {
+                it.read(Netlius.DEFAULT_BUFFER_SIZE) {
+                    bytesRead += bufferSizeAsLong
+                }
+            }
+        }
 
-        //client.queueAndFlush()
+        repeat(100) {
+
+            val client = Netlius.client("127.0.0.1", 25565)
+            val packet = Packet().bytes(ByteArray(Netlius.DEFAULT_BUFFER_SIZE) { 1 })
 
 
+            val job = GlobalScope.launch {
+                while (true) {
+                    client.queueAndFlush(packet)
+                }
+            }
+
+            runBlocking {
+                job.cancel()
+                delay(1_000)
+                println("${bytesRead.value / 1024 / 1024}MB/s")
+                bytesRead.getAndSet(0)
+            }
+        }
     }
 
     @Test
@@ -92,6 +116,36 @@ class ClientTest {
         assert(succeeded)
     }
 
+
+    @Test
+    fun `attack of the client part 1 season 1`() = runBlocking {
+
+        val server = Netlius.server("127.0.0.1", 25565)
+
+        server.onConnect { client ->
+            println(measureTimeMillis {
+                repeat(7_000) {
+                    client.readString()
+                }
+            })
+        }
+
+        repeat(100_000) {
+
+            val client = Netlius.clientSuspending("127.0.0.1", 25565)
+            val meowPacket = Packet().string("Meow")
+
+            //client.queueAndFlush(meowPacket)
+
+            (1..7000).map {
+                async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
+                    client.queueAndFlush(meowPacket)
+                }
+            }.awaitAll()
+        }
+
+        delay(10_000)
+    }
 
     @Test
     fun `attack of the clients part 2 season 4`() = runBlocking {
