@@ -1,5 +1,8 @@
 package me.camdenorrb.netlius.net
 
+import kotlinx.coroutines.cancel
+import me.camdenorrb.netlius.Netlius
+import java.io.EOFException
 import java.net.StandardSocketOptions
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
@@ -9,10 +12,7 @@ import java.nio.channels.CompletionHandler
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+import kotlin.coroutines.*
 
 // https://www.baeldung.com/java-nio2-async-socket-channel
 // TODO: Use a different coroutine for writing and reading
@@ -32,8 +32,8 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
 
 
     init {
-        channel.setOption(StandardSocketOptions.SO_RCVBUF, BUFFER_SIZE)
-        channel.setOption(StandardSocketOptions.SO_SNDBUF, BUFFER_SIZE)
+        channel.setOption(StandardSocketOptions.SO_RCVBUF, Netlius.DEFAULT_BUFFER_SIZE)
+        channel.setOption(StandardSocketOptions.SO_SNDBUF, Netlius.DEFAULT_BUFFER_SIZE)
         channel.setOption(StandardSocketOptions.TCP_NODELAY, true)
         channel.setOption(StandardSocketOptions.SO_KEEPALIVE, false)
     }
@@ -51,8 +51,6 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     // TODO: Check for InterruptedByTimeoutException and disconnect if so
     suspend inline fun <T : Any> read(size: Int, block: ByteBuffer.() -> T): T {
 
-        lateinit var value: T
-
         byteBufferPool.take(size) { byteBuffer ->
 
             if (IS_DEBUGGING) {
@@ -60,27 +58,24 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
             }
 
             try {
+
                 suspendCoroutine<Unit> { continuation ->
                     channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
                 }
-            } catch (ex: Exception) {
+
+                if (IS_DEBUGGING) {
+                    println("Read: $size bytes")
+                }
+
+                return block(byteBuffer.flip())
+            }
+            catch (ex: Exception) {
                 close()
                 throw ex
             }
-
-            if (IS_DEBUGGING) {
-                println("Read: $size bytes")
-            }
-
-            byteBuffer.position(0)
-
-            value = block(byteBuffer)
         }
 
-        //println("Size: $size, Capacity: ${byteBuffer.capacity()}, IsReadOnly: ${byteBuffer.isReadOnly}, IsDirect: ${byteBuffer.isDirect}, Order: ${byteBuffer.order()}, Limit: ${byteBuffer.limit()}, Position: ${byteBuffer.position()} Remaining: ${byteBuffer.remaining()}, HasRemaining: ${byteBuffer.hasRemaining()}}")
-
-        //println(value)
-        return value
+        error("Unable to take from ByteBufferPool?")
     }
 
     suspend fun readByte(): Byte {
@@ -98,8 +93,8 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     suspend fun readBoolean(): Boolean {
         return when (val read = readByte().toInt()) {
 
+            0 -> false
             1 -> true
-            2 -> false
 
             else -> error("Unable to read boolean '$read'")
         }
@@ -124,7 +119,6 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     suspend fun readDouble(): Double {
         return read(Double.SIZE_BYTES) { double }
     }
-
 
     suspend fun readString(): String {
         val size = readShort().toInt()
@@ -191,6 +185,11 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
 
         override fun completed(result: Int, attachment: Continuation<Unit>) {
 
+            if (result == -1) {
+                attachment.resumeWithException(EOFException())
+                return
+            }
+
             attachment.resume(Unit)
 
             if (IS_DEBUGGING) {
@@ -224,8 +223,6 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
 
 
     companion object {
-
-        const val BUFFER_SIZE = 8_192
 
         const val IS_DEBUGGING = false
 

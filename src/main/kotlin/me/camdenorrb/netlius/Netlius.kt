@@ -13,13 +13,16 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.max
 
 // TODO: Make a class which takes in the bytebufferpool size, bytebufferpool, threadpool, etc
 object Netlius {
 
+    const val DEFAULT_BUFFER_SIZE = 65_536
+
     val byteBufferPool = DirectByteBufferPool(10)
 
-    internal val threadPoolDispatcher = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()).asCoroutineDispatcher()
+    internal val threadPoolDispatcher = Executors.newFixedThreadPool(max(Runtime.getRuntime().availableProcessors(), 64)).asCoroutineDispatcher()
 
 
     fun client(ip: String, port: Int): Client {
@@ -55,6 +58,7 @@ object Netlius {
         threadPoolDispatcher.close()
     }
 
+
     object ClientCompletionHandler : CompletionHandler<Void, Continuation<Unit>> {
 
         override fun completed(result: Void?, attachment: Continuation<Unit>) {
@@ -66,5 +70,6 @@ object Netlius {
         }
 
     }
+
 
 }

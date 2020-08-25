@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import me.camdenorrb.netlius.Netlius
+import java.io.EOFException
 import java.net.InetSocketAddress
 import java.net.StandardSocketOptions
 import java.nio.channels.AsynchronousServerSocketChannel
@@ -29,7 +30,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
     private var onStopListeners = mutableListOf<Server.() -> Unit>()
 
-    private var onConnectListeners = mutableListOf<suspend Client.() -> Unit>()
+    private var onConnectListeners = mutableListOf<suspend (Client) -> Unit>()
 
 
     var isClosing = false
@@ -49,7 +50,7 @@ class Server internal constructor(val ip: String, val port: Int) {
         }
 
         channel = AsynchronousServerSocketChannel.open().bind(InetSocketAddress(ip, port))
-        channel.setOption(StandardSocketOptions.SO_RCVBUF, DEFAULT_BUFFER_SIZE)
+        channel.setOption(StandardSocketOptions.SO_RCVBUF, Netlius.DEFAULT_BUFFER_SIZE)
 
         isRunning = true
 
@@ -61,12 +62,17 @@ class Server internal constructor(val ip: String, val port: Int) {
                     channel.accept(continuation, AcceptCompletionHandler)
                 }
 
+                client.channel.setOption(StandardSocketOptions.SO_RCVBUF, Netlius.DEFAULT_BUFFER_SIZE)
+                client.channel.setOption(StandardSocketOptions.SO_SNDBUF, Netlius.DEFAULT_BUFFER_SIZE)
+                client.channel.setOption(StandardSocketOptions.SO_KEEPALIVE, false)
+                client.channel.setOption(StandardSocketOptions.TCP_NODELAY, true)
+
                 launch(Netlius.threadPoolDispatcher) {
                     try {
                         onConnectListeners.forEach { it(client) }
                     } catch (ex: Exception) {
-                        if (!isClosing) {
-                            throw ex
+                        if (!isClosing && ex !is EOFException) {
+                            ex.printStackTrace()
                         }
                     }
                 }
@@ -94,7 +100,7 @@ class Server internal constructor(val ip: String, val port: Int) {
 
 
 
-    fun onConnect(block: suspend Client.() -> Unit) {
+    fun onConnect(block: suspend (Client) -> Unit) {
         onConnectListeners.add(block)
     }
 

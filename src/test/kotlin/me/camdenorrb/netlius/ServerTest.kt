@@ -140,16 +140,16 @@ class ServerTest {
                     }
 
                     client.queueAndFlush(pingPacket)
-                    client.close()
+                    //client.close()
                 }
 
             }
 
         }
 
-        server.onConnect {
-            while (channel.isOpen) {
-                handleNextPacket(this)
+        server.onConnect { client ->
+            while (client.channel.isOpen) {
+                handleNextPacket(client)
             }
         }
 

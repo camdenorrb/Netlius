@@ -2,7 +2,9 @@ package me.camdenorrb.netlius
 
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
+import me.camdenorrb.netlius.net.DirectByteBufferPool
 import me.camdenorrb.netlius.net.Packet
+import kotlin.system.measureNanoTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -13,9 +15,9 @@ class ClientTest {
 
         val server = Netlius.server("127.0.0.1", 25565)
 
-        server.onConnect {
-            while (channel.isOpen) {
-                println(readString())
+        server.onConnect { client ->
+            while (client.channel.isOpen) {
+                println(client.readString())
             }
         }
 
@@ -29,13 +31,26 @@ class ClientTest {
     }
 
     @Test
+    fun `client server speedtest`() {
+
+        val server = Netlius.server("127.0.0.1", 25565)
+        val client = Netlius.client("127.0.0.1", 25565)
+
+        val packet = Packet().bytes(ByteArray(Netlius.DEFAULT_BUFFER_SIZE) { 1 })
+
+        //client.queueAndFlush()
+
+
+    }
+
+    @Test
     fun `client multipart message test`() {
 
         val server = Netlius.server("127.0.0.1", 25565)
 
-        server.onConnect {
-            while (channel.isOpen) {
-                assertEquals("${readString()}${readString()}", "12")
+        server.onConnect { client ->
+            while (client.channel.isOpen) {
+                assertEquals("${client.readString()}${client.readString()}".also { println(it) }, "12")
             }
         }
 
@@ -54,9 +69,9 @@ class ClientTest {
         val server = Netlius.server("127.0.0.1", 25565)
         var succeeded = false
 
-        server.onConnect {
-            while (channel.isOpen) {
-                assertEquals("${readString()}${readString()}${readString()}", "123")
+        server.onConnect { client ->
+            while (client.channel.isOpen) {
+                assertEquals("${client.readString()}${client.readString()}${client.readString()}", "123")
                 succeeded = true
             }
         }
@@ -83,9 +98,10 @@ class ClientTest {
 
         val server = Netlius.server("127.0.0.1", 25565)
 
-        server.onConnect {
-            while (channel.isOpen) {
-                println("${readString()}:${readString()}")
+        server.onConnect { client ->
+            while (client.channel.isOpen) {
+                client.readString()
+                client.readString()
             }
         }
 

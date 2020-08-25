@@ -21,7 +21,6 @@ class Packet {
     // Numbers
 
     fun byte(byte: Byte): Packet {
-
         return addWriteTask(Byte.SIZE_BYTES) {
             it.put(byte)
         }
@@ -89,7 +88,6 @@ class Packet {
     fun string(string: String): Packet {
 
         val bytes = string.encodeToByteArray()
-        size += bytes.size
 
         short(bytes.size.toShort())
         return bytes(bytes)
