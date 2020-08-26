@@ -2,6 +2,7 @@ package me.camdenorrb.netlius.net
 
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import me.camdenorrb.netlius.Netlius
 import me.camdenorrb.netlius.ext.decodeToString
 import java.io.EOFException
@@ -24,7 +25,7 @@ import kotlin.coroutines.*
 typealias ClientListener = (Client) -> Unit
 
 // TODO: Implement compression
-class Client internal constructor(channel: AsynchronousSocketChannel) {
+class Client internal constructor(channel: AsynchronousSocketChannel, val byteBufferPool: DirectByteBufferPool) {
 
     val packetQueue = ConcurrentLinkedQueue<Packet>()
 
@@ -34,11 +35,6 @@ class Client internal constructor(channel: AsynchronousSocketChannel) {
     val readLock = Mutex()
 
     val writeLock = Mutex()
-
-
-    val readBuffer = ByteBuffer.allocateDirect(Netlius.DEFAULT_BUFFER_SIZE)
-
-    val writeBuffer = ByteBuffer.allocateDirect(Netlius.DEFAULT_BUFFER_SIZE)
 
 
     var channel = channel
@@ -65,33 +61,33 @@ class Client internal constructor(channel: AsynchronousSocketChannel) {
     // TODO: Check for InterruptedByTimeoutException and disconnect if so
     suspend inline fun <T : Any> read(size: Int, block: ByteBuffer.() -> T): T {
 
-        readLock.lock(readBuffer)
-
-        try {
-
-            readBuffer.clear().limit(size)
+        byteBufferPool.take(size) { byteBuffer ->
 
             if (IS_DEBUGGING) {
-                println("Reading: $size bytes, Remaining: ${readBuffer.remaining()}")
+                println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
             }
 
-            suspendCoroutine<Unit> { continuation ->
-                channel.read(readBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
+            try {
+
+                readLock.withLock {
+                    suspendCoroutine<Unit> { continuation ->
+                        channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
+                    }
+                }
+
+                if (IS_DEBUGGING) {
+                    println("Read: $size bytes")
+                }
+
+                return block(byteBuffer.flip())
             }
-
-            if (IS_DEBUGGING) {
-                println("Read: $size bytes")
+            catch (ex: Exception) {
+                close()
+                throw ex
             }
-
-            readLock.unlock()
-            val value = block(readBuffer.flip())
-
-            return value
-
-        } catch (ex: Exception) {
-            close()
-            throw ex
         }
+
+        error("Unable to take from ByteBufferPool?")
     }
 
     suspend fun readByte(): Byte {
@@ -155,32 +151,31 @@ class Client internal constructor(channel: AsynchronousSocketChannel) {
     }
 
     suspend fun flush() {
+        byteBufferPool.take(Netlius.DEFAULT_BUFFER_SIZE) { byteBuffer ->
+            packetQueue.clearingForEach { packet ->
 
-        writeLock.lock()
-
-        packetQueue.clearingForEach { packet ->
-
-            packet.writeQueue.forEach { writeTask ->
-                writeTask(writeBuffer)
-            }
-
-            writeBuffer.flip()
-
-            try {
-
-                suspendCoroutine<Unit> { continuation ->
-                    channel.write(writeBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
+                packet.writeQueue.forEach { writeTask ->
+                    writeTask(byteBuffer)
                 }
 
-                writeBuffer.clear()
-            }
-            catch (ex: Exception) {
-                close()
-                throw ex
+                byteBuffer.flip()
+
+                try {
+                    writeLock.withLock {
+                        suspendCoroutine<Unit> { continuation ->
+                            channel.write(byteBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
+                        }
+                    }
+                }
+                catch (ex: Exception) {
+                    close()
+                    throw ex
+                }
+                finally {
+                    byteBuffer.clear()
+                }
             }
         }
-
-        writeLock.unlock()
     }
 
 

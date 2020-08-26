@@ -3,8 +3,6 @@ package me.camdenorrb.netlius
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import me.camdenorrb.netlius.net.Packet
-import kotlin.system.exitProcess
-import kotlin.system.measureNanoTime
 import kotlin.system.measureTimeMillis
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -14,7 +12,7 @@ class ClientTest {
     @Test
     fun `client single message test`() {
 
-        val server = Netlius.server("127.0.0.1", 25565)
+        val server = Netlius.server("127.0.0.1", 12345)
 
         server.onConnect { client ->
             while (client.channel.isOpen) {
@@ -22,7 +20,7 @@ class ClientTest {
             }
         }
 
-        val client = Netlius.client("127.0.0.1", 25565)
+        val client = Netlius.client("127.0.0.1", 12345)
         val packet = Packet().string("Meow")
 
         runBlocking {
@@ -34,7 +32,7 @@ class ClientTest {
     @Test
     fun `client to server local throughput speedtest`() {
 
-        val server = Netlius.server("127.0.0.1", 25565)
+        val server = Netlius.server("127.0.0.1", 12345)
         val bytesRead = atomic(0L)
         val bufferSizeAsLong = Netlius.DEFAULT_BUFFER_SIZE.toLong()
 
@@ -46,7 +44,7 @@ class ClientTest {
             }
         }
 
-        val client = Netlius.client("127.0.0.1", 25565)
+        val client = Netlius.client("127.0.0.1", 12345)
 
         repeat(100) {
 
@@ -70,7 +68,7 @@ class ClientTest {
     @Test
     fun `client multipart message test`() {
 
-        val server = Netlius.server("127.0.0.1", 25565)
+        val server = Netlius.server("127.0.0.1", 12345)
 
         server.onConnect { client ->
             while (client.channel.isOpen) {
@@ -78,7 +76,7 @@ class ClientTest {
             }
         }
 
-        val client = Netlius.client("127.0.0.1", 25565)
+        val client = Netlius.client("127.0.0.1", 12345)
         val packet = Packet().string("1").string("2")
 
         runBlocking {
@@ -90,7 +88,7 @@ class ClientTest {
     @Test
     fun `client prepend message test`() {
 
-        val server = Netlius.server("127.0.0.1", 25565)
+        val server = Netlius.server("127.0.0.1", 12345)
         var succeeded = false
 
         server.onConnect { client ->
@@ -100,7 +98,7 @@ class ClientTest {
             }
         }
 
-        val client = Netlius.client("127.0.0.1", 25565)
+        val client = Netlius.client("127.0.0.1", 12345)
 
         val packet = Packet().string("3").prepend {
             string("1")
@@ -120,22 +118,19 @@ class ClientTest {
     @Test
     fun `attack of the client part 1 season 1`() = runBlocking {
 
-        val server = Netlius.server("127.0.0.1", 25565)
+        val server = Netlius.server("127.0.0.1", 12345)
 
         server.onConnect { client ->
             println(measureTimeMillis {
-
                 repeat(7_000) {
-                    client.readString()
+                    assertEquals(client.readString(), "Meow")
                 }
-
-                exitProcess(0)
             })
         }
 
         repeat(100_000) {
 
-            val client = Netlius.clientSuspending("127.0.0.1", 25565)
+            val client = Netlius.clientSuspending("127.0.0.1", 12345)
             val meowPacket = Packet().string("Meow")
 
             //client.queueAndFlush(meowPacket)
@@ -153,13 +148,13 @@ class ClientTest {
     @Test
     fun `attack of the clients part 2 season 4`(): Unit = runBlocking {
 
-        val server = Netlius.server("127.0.0.1", 25565)
+        val server = Netlius.server("127.0.0.1", 12345)
         val count = atomic(0)
 
         server.onConnect { client ->
 
-            client.readString()
-            client.readString()
+            assertEquals(client.readString(), "Meow")
+            assertEquals(client.readString(), "Test")
 
             count += 1
         }
@@ -168,7 +163,7 @@ class ClientTest {
 
         (1..1_000).map {
             async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
-                val client = Netlius.clientSuspending("127.0.0.1", 25565)
+                val client = Netlius.clientSuspending("127.0.0.1", 12345)
                 client.queueAndFlush(packet)
             }
         }.awaitAll()
@@ -206,6 +201,7 @@ class ClientTest {
 
 
     // TODO: Test with a longer read timeout when you make that a configurable option... TSSK TSSSK
+    /*
     @Test
     fun `slow client reader test`(): Unit = runBlocking {
 
@@ -232,27 +228,34 @@ class ClientTest {
 
         delay(Long.MAX_VALUE)
     }
+    */
 
 
+    /*
     @Test
     fun `10 million connections?!`(): Unit = runBlocking {
 
         val server = Netlius.server("127.0.0.1", 12345)
-
         val count = atomic(0)
 
         server.onConnect { client ->
-            count += 1
+            client.readByte()
             println(count)
+            count += 1
         }
 
-        (1..1_000).map {
-            async(Netlius.threadPoolDispatcher) {
-                repeat(10_000_000) {
-                    Netlius.clientSuspending("127.0.0.1", 12345)
-                }
+        val blankPacket = Packet().byte(0)
+
+        (1..10_000_000).map {
+            async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
+                Netlius.clientSuspending("127.0.0.1", 12345).queueAndFlush(blankPacket)
             }
         }.awaitAll()
+
+        while (count.value != 1_000) {
+            Thread.onSpinWait()
+        }
     }
+    */
 
 }
