@@ -19,8 +19,6 @@ object Netlius {
 
     const val DEFAULT_BUFFER_SIZE = 65_536
 
-    //val byteBufferPool = DirectByteBufferPool(10)
-
     internal val threadPoolDispatcher = Executors.newFixedThreadPool(max(Runtime.getRuntime().availableProcessors(), 64)).asCoroutineDispatcher()
 
 

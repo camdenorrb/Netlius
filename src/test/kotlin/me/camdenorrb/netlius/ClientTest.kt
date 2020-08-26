@@ -124,9 +124,12 @@ class ClientTest {
 
         server.onConnect { client ->
             println(measureTimeMillis {
+
                 repeat(7_000) {
                     client.readString()
                 }
+
+                exitProcess(0)
             })
         }
 
@@ -148,30 +151,31 @@ class ClientTest {
     }
 
     @Test
-    fun `attack of the clients part 2 season 4`() = runBlocking {
+    fun `attack of the clients part 2 season 4`(): Unit = runBlocking {
 
         val server = Netlius.server("127.0.0.1", 25565)
+        val count = atomic(0)
 
         server.onConnect { client ->
-            while (client.channel.isOpen) {
-                client.readString()
-                client.readString()
-            }
+
+            client.readString()
+            client.readString()
+
+            count += 1
         }
 
-        val count = atomic(0)
+        val packet = Packet().string("Meow").string("Test")
 
         (1..1_000).map {
             async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
                 val client = Netlius.clientSuspending("127.0.0.1", 25565)
-                client.queueAndFlush(Packet().string("Meow").string("Test${count.getAndAdd(1)}"))
+                client.queueAndFlush(packet)
             }
         }.awaitAll()
 
-        assertEquals(count.value, 1_000)
-
-        server.stop()
-        Netlius.stop()
+        while (count.value != 1_000) {
+            Thread.onSpinWait()
+        }
     }
 
     // Takes 30 seconds to run due to timeout
@@ -198,6 +202,57 @@ class ClientTest {
         }
 
         assert(!client.channel.isOpen)
+    }
+
+
+    // TODO: Test with a longer read timeout when you make that a configurable option... TSSK TSSSK
+    @Test
+    fun `slow client reader test`(): Unit = runBlocking {
+
+        val server = Netlius.server("127.0.0.1", 12345)
+
+        server.onConnect { client ->
+
+            repeat(1_000_000) {
+                delay(10)
+                assertEquals(client.readLong(), 10)
+            }
+
+            exitProcess(0)
+        }
+
+        val client = Netlius.client("127.0.0.1", 12345)
+        val packet = Packet().long(10)
+
+        repeat (1_000_000) {
+            client.queueAndFlush(packet)
+        }
+
+        println("All sent")
+
+        delay(Long.MAX_VALUE)
+    }
+
+
+    @Test
+    fun `10 million connections?!`(): Unit = runBlocking {
+
+        val server = Netlius.server("127.0.0.1", 12345)
+
+        val count = atomic(0)
+
+        server.onConnect { client ->
+            count += 1
+            println(count)
+        }
+
+        (1..1_000).map {
+            async(Netlius.threadPoolDispatcher) {
+                repeat(10_000_000) {
+                    Netlius.clientSuspending("127.0.0.1", 12345)
+                }
+            }
+        }.awaitAll()
     }
 
 }

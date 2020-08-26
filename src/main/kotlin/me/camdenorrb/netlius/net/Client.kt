@@ -3,6 +3,7 @@ package me.camdenorrb.netlius.net
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.sync.Mutex
 import me.camdenorrb.netlius.Netlius
+import me.camdenorrb.netlius.ext.decodeToString
 import java.io.EOFException
 import java.net.StandardSocketOptions
 import java.nio.BufferUnderflowException
@@ -10,6 +11,8 @@ import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
@@ -133,9 +136,13 @@ class Client internal constructor(channel: AsynchronousSocketChannel) {
         return read(Double.SIZE_BYTES) { double }
     }
 
-    suspend fun readString(): String {
+    suspend fun readString(encoding: Charset = StandardCharsets.UTF_8): String {
+
         val size = readShort().toInt()
-        return readBytes(size).decodeToString()
+
+        return read(size) {
+            this.decodeToString(encoding)
+        }
     }
 
     fun queue(vararg packets: Packet) {
