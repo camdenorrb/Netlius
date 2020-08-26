@@ -157,9 +157,10 @@ class Client internal constructor(channel: AsynchronousSocketChannel) {
                 writeTask(writeBuffer)
             }
 
-            writeBuffer.limit(writeBuffer.position()).flip()
+            writeBuffer.flip()
 
             try {
+
                 suspendCoroutine<Unit> { continuation ->
                     channel.write(writeBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
                 }
