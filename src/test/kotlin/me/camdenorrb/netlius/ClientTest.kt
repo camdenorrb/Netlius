@@ -46,11 +46,11 @@ class ClientTest {
             }
         }
 
+        val client = Netlius.client("127.0.0.1", 25565)
+
         repeat(100) {
 
-            val client = Netlius.client("127.0.0.1", 25565)
             val packet = Packet().bytes(ByteArray(Netlius.DEFAULT_BUFFER_SIZE) { 1 })
-
 
             val job = GlobalScope.launch {
                 while (true) {

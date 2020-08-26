@@ -2,7 +2,6 @@ package me.camdenorrb.netlius
 
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
-import me.camdenorrb.netlius.net.DirectByteBufferPool
 import me.camdenorrb.netlius.net.Packet
 import tech.poder.podercord.networking.MooDirectByteBufferPool
 import java.nio.ByteBuffer
@@ -49,14 +48,14 @@ class Benchmark {
 
         repeat(10) {
 
-            val pool = DirectByteBufferPool(20)
+            //val pool = DirectByteBufferPool(20)
             val poolReallocateTime = atomic(0L)
 
             runBlocking {
                 (1..DEFAULT_CYCLES).map {
                     async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
                         poolReallocateTime += (measureNanoTime {
-                            pool.take(DEFAULT_BUFFER_SIZE) {}
+                            //pool.take(DEFAULT_BUFFER_SIZE) {}
                         })
                     }
                 }.awaitAll()
@@ -93,11 +92,11 @@ class Benchmark {
         repeat(10) {
             runBlocking {
 
-                val pool = DirectByteBufferPool(20)
+                //val pool = DirectByteBufferPool(20)
 
                 val totalTimeNS = (1..DEFAULT_CYCLES).sumByDouble {
                     measureNanoTime {
-                        pool.take(1) {}
+                        //pool.take(1) {}
                     }.toDouble()
                 }
 

@@ -1,9 +1,8 @@
 package me.camdenorrb.netlius.net
 
+/*
 import me.camdenorrb.netlius.Netlius
-import java.io.EOFException
 import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class DirectByteBufferPool(size: Int, val bufferSize: Int = Netlius.DEFAULT_BUFFER_SIZE) {
@@ -37,3 +36,4 @@ class DirectByteBufferPool(size: Int, val bufferSize: Int = Netlius.DEFAULT_BUFF
     }
 
 }
+*/

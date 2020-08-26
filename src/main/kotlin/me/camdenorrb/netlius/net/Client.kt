@@ -21,7 +21,7 @@ import kotlin.coroutines.*
 typealias ClientListener = (Client) -> Unit
 
 // TODO: Implement compression
-class Client internal constructor(channel: AsynchronousSocketChannel, val byteBufferPool: DirectByteBufferPool) {
+class Client internal constructor(channel: AsynchronousSocketChannel) {
 
     val packetQueue = ConcurrentLinkedQueue<Packet>()
 
@@ -31,6 +31,11 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     val readLock = Mutex()
 
     val writeLock = Mutex()
+
+
+    val readBuffer = ByteBuffer.allocateDirect(Netlius.DEFAULT_BUFFER_SIZE)
+
+    val writeBuffer = ByteBuffer.allocateDirect(Netlius.DEFAULT_BUFFER_SIZE)
 
 
     var channel = channel
@@ -57,34 +62,33 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     // TODO: Check for InterruptedByTimeoutException and disconnect if so
     suspend inline fun <T : Any> read(size: Int, block: ByteBuffer.() -> T): T {
 
-        readLock.lock()
+        readLock.lock(readBuffer)
 
-        byteBufferPool.take(size) { byteBuffer ->
+        try {
+
+            readBuffer.clear().limit(size)
 
             if (IS_DEBUGGING) {
-                println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
+                println("Reading: $size bytes, Remaining: ${readBuffer.remaining()}")
             }
 
-            try {
-
-                suspendCoroutine<Unit> { continuation ->
-                    channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
-                }
-
-                if (IS_DEBUGGING) {
-                    println("Read: $size bytes")
-                }
-
-                readLock.unlock()
-                return block(byteBuffer.flip())
+            suspendCoroutine<Unit> { continuation ->
+                channel.read(readBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
             }
-            catch (ex: Exception) {
-                close()
-                throw ex
+
+            if (IS_DEBUGGING) {
+                println("Read: $size bytes")
             }
+
+            readLock.unlock()
+            val value = block(readBuffer.flip())
+
+            return value
+
+        } catch (ex: Exception) {
+            close()
+            throw ex
         }
-
-        error("Unable to take from ByteBufferPool?")
     }
 
     suspend fun readByte(): Byte {
@@ -148,23 +152,23 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
         writeLock.lock()
 
         packetQueue.clearingForEach { packet ->
-            byteBufferPool.take(packet.size) { byteBuffer ->
 
-                packet.writeQueue.forEach { writeTask ->
-                    writeTask(byteBuffer)
+            packet.writeQueue.forEach { writeTask ->
+                writeTask(writeBuffer)
+            }
+
+            writeBuffer.limit(writeBuffer.position()).flip()
+
+            try {
+                suspendCoroutine<Unit> { continuation ->
+                    channel.write(writeBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
                 }
 
-                byteBuffer.flip()
-
-                try {
-                    suspendCoroutine<Unit> { continuation ->
-                        channel.write(byteBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
-                    }
-                }
-                catch (ex: Exception) {
-                    close()
-                    throw ex
-                }
+                writeBuffer.clear()
+            }
+            catch (ex: Exception) {
+                close()
+                throw ex
             }
         }
 
@@ -198,7 +202,6 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     object ReadCompletionHandler : CompletionHandler<Int, Continuation<Unit>> {
 
         override fun completed(result: Int, attachment: Continuation<Unit>) {
-
 
             if (result == -1) {
                 attachment.resumeWithException(EOFException())
