@@ -12,18 +12,16 @@ class Packet {
     internal var isPrepending = false
 
     @PublishedApi
-    internal val writeQueue = mutableListOf<WriteTask>()
+    internal val writeQueue = mutableListOf<WriteValue>()
 
     @PublishedApi
-    internal val prependWriteQueue = mutableListOf<WriteTask>()
+    internal val prependWriteQueue = mutableListOf<WriteValue>()
 
 
     // Numbers
 
     fun byte(byte: Byte): Packet {
-        return addWriteTask(Byte.SIZE_BYTES) {
-            it.put(byte)
-        }
+        return addWriteValue(Byte.SIZE_BYTES, byte)
     }
 
     fun boolean(boolean: Boolean): Packet {
@@ -31,59 +29,28 @@ class Packet {
     }
 
     fun bytes(bytes: ByteArray): Packet {
-        return addWriteTask(bytes.size * Byte.SIZE_BYTES) {
-            it.put(bytes)
-        }
+        return addWriteValue(bytes.size * Byte.SIZE_BYTES, bytes)
     }
 
     fun short(short: Short): Packet {
-        return addWriteTask(Short.SIZE_BYTES) {
-            it.putShort(short)
-        }
+        return addWriteValue(Short.SIZE_BYTES, short)
     }
 
     fun int(int: Int): Packet {
-        return addWriteTask(Int.SIZE_BYTES) {
-            it.putInt(int)
-        }
+        return addWriteValue(Int.SIZE_BYTES, int)
     }
 
     fun long(long: Long): Packet {
-        return addWriteTask(Long.SIZE_BYTES) {
-            it.putLong(long)
-        }
+        return addWriteValue(Long.SIZE_BYTES, long)
     }
 
-
     fun float(float: Float): Packet {
-        return addWriteTask(Float.SIZE_BYTES) {
-            it.putFloat(float)
-        }
+        return addWriteValue(Float.SIZE_BYTES, float)
     }
 
     fun double(double: Double): Packet {
-        return addWriteTask(Double.SIZE_BYTES) {
-            it.putDouble(double)
-        }
+        return addWriteValue(Double.SIZE_BYTES, double)
     }
-
-
-    fun addWriteTask(size: Int, block: (ByteBuffer) -> Unit): Packet {
-
-        this.size += size
-
-        if (isPrepending) {
-            prependWriteQueue.add(WriteTask(size, block))
-        }
-        else {
-            writeQueue.add(WriteTask(size, block))
-        }
-
-        return this
-    }
-
-
-    // Data
 
     fun string(string: String): Packet {
 
@@ -91,6 +58,35 @@ class Packet {
 
         short(bytes.size.toShort())
         return bytes(bytes)
+    }
+
+
+    fun addWriteValue(size: Int, value: Any): Packet {
+
+        this.size += size
+
+        if (isPrepending) {
+            prependWriteQueue.add(WriteValue(size, value))
+        }
+        else {
+            writeQueue.add(WriteValue(size, value))
+        }
+
+        return this
+    }
+
+    fun writeToBuffer(buffer: ByteBuffer) {
+        writeQueue.forEach {
+            when (val value = it.value) {
+                is Byte -> buffer.put(value)
+                is ByteArray -> buffer.put(value)
+                is Short -> buffer.putShort(value)
+                is Int -> buffer.putInt(value)
+                is Long -> buffer.putLong(value)
+                is Float -> buffer.putFloat(value)
+                is Double -> buffer.putDouble(value)
+            }
+        }
     }
 
     inline fun prepend(block: Packet.() -> Unit): Packet {
@@ -106,6 +102,10 @@ class Packet {
     }
 
 
+
+    data class WriteValue(val size: Int, val value: Any)
+
+    /*
     data class WriteTask(val size: Int, val block: (ByteBuffer) -> Unit) {
 
         operator fun invoke(byteBuffer: ByteBuffer) {
@@ -113,6 +113,7 @@ class Packet {
         }
 
     }
+    */
 
 
 

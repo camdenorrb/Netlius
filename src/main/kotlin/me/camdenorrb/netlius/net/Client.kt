@@ -151,13 +151,10 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     }
 
     suspend fun flush() {
-        byteBufferPool.take(Netlius.DEFAULT_BUFFER_SIZE) { byteBuffer ->
-            packetQueue.clearingForEach { packet ->
+        packetQueue.clearingForEach { packet ->
+            byteBufferPool.take(packet.size) { byteBuffer ->
 
-                packet.writeQueue.forEach { writeTask ->
-                    writeTask(byteBuffer)
-                }
-
+                packet.writeToBuffer(byteBuffer)
                 byteBuffer.flip()
 
                 try {

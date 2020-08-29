@@ -34,7 +34,7 @@ tasks {
         kotlinOptions.jvmTarget = "1.8"
     }
     wrapper {
-        gradleVersion = "6.6"
+        gradleVersion = "6.6.1"
     }
 }
 

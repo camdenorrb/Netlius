@@ -44,13 +44,13 @@ class ClientTest {
             }
         }
 
-        val client = Netlius.client("127.0.0.1", 12345)
 
         repeat(100) {
 
             val packet = Packet().bytes(ByteArray(Netlius.DEFAULT_BUFFER_SIZE) { 1 })
+            val client = Netlius.client("127.0.0.1", 12345)
 
-            val job = GlobalScope.launch {
+            val job = GlobalScope.launch(Netlius.threadPoolDispatcher) {
                 while (true) {
                     client.queueAndFlush(packet)
                 }
