@@ -2,7 +2,7 @@ plugins {
     java
     maven
     //`maven-publish`
-    kotlin("jvm") version "1.4.0"
+    kotlin("jvm") version "1.4.10"
 }
 
 group = "me.camdenorrb"
@@ -23,7 +23,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:atomicfu:0.14.4")
 
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-M1")
 }
 
 tasks {

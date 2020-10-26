@@ -1,6 +1,5 @@
 package me.camdenorrb.netlius.net
 
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import me.camdenorrb.netlius.Netlius
@@ -17,7 +16,10 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.*
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 // https://www.baeldung.com/java-nio2-async-socket-channel
 // TODO: Use a different coroutine for writing and reading
@@ -85,6 +87,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                 close()
                 throw ex
             }
+
         }
 
         error("Unable to take from ByteBufferPool?")

@@ -1,11 +1,13 @@
 package me.camdenorrb.netlius
 
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import me.camdenorrb.netlius.net.Packet
 import tech.poder.podercord.networking.MooDirectByteBufferPool
 import java.nio.ByteBuffer
-import kotlin.math.max
 import kotlin.system.measureNanoTime
 import kotlin.test.Test
 
@@ -13,34 +15,38 @@ class Benchmark {
 
     @Test
     fun `echo benchmark`() {
-
         val server = Netlius.server("127.0.0.1", 12345)
         val client = Netlius.client("127.0.0.1", 12345)
 
         val serverTimeMS = atomic(0L)
         val clientTimeMS = atomic(0L)
 
+        val packet = Packet().byte(0)
+
         server.onConnect { client ->
-            repeat(DEFAULT_CYCLES) {
+            repeat(DEFAULT_CYCLES * 2) {
                 serverTimeMS += measureNanoTime {
                     client.readByte()
                 }
             }
         }
 
-        runBlocking {
+        repeat(2) {
 
-            val packet = Packet().byte(0)
-
-            repeat(DEFAULT_CYCLES) {
-                clientTimeMS += measureNanoTime {
-                    client.queueAndFlush(packet)
+            runBlocking {
+                repeat(DEFAULT_CYCLES) {
+                    clientTimeMS += measureNanoTime {
+                        client.queueAndFlush(packet)
+                    }
                 }
             }
-        }
 
-        val averageNS = max(clientTimeMS.value, serverTimeMS.value) / DEFAULT_CYCLES
-        println("$averageNS nanoseconds per call")
+            val averageNS = (clientTimeMS.value + serverTimeMS.value) / DEFAULT_CYCLES
+            println("$averageNS nanoseconds per call")
+
+            clientTimeMS.getAndSet(0)
+            serverTimeMS.getAndSet(0)
+        }
     }
 
     @Test

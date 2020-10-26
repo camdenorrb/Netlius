@@ -9,6 +9,19 @@ import kotlin.test.Test
 class ServerTest {
 
     @Test
+    fun `rust server test`() {
+
+        val server = Netlius.server("127.0.0.1", 12345)
+
+        server.onConnect {
+            println(it.readString())
+            it.queueAndFlush(Packet().string("Meow"))
+        }
+
+        Thread.sleep(1000000)
+    }
+
+    @Test
     fun `a minecraft server list responder`() {
 
         val server = Netlius.server("127.0.0.1", 25565)

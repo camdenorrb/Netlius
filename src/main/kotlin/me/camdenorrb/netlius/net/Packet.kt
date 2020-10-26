@@ -61,7 +61,7 @@ class Packet {
     }
 
 
-    fun addWriteValue(size: Int, value: Any): Packet {
+    private fun addWriteValue(size: Int, value: Any): Packet {
 
         this.size += size
 
