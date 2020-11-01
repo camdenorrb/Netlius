@@ -23,7 +23,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:atomicfu:0.14.4")
 
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0-M1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.0")
 }
 
 tasks {
@@ -34,7 +34,7 @@ tasks {
         kotlinOptions.jvmTarget = "1.8"
     }
     wrapper {
-        gradleVersion = "6.6.1"
+        gradleVersion = "6.7"
     }
 }
 
