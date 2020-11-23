@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "me.camdenorrb"
-version = "1.0-SNAPSHOT-DEBUG"
+version = "1.0-SNAPSHOT"
 
 repositories {
 
