@@ -17,7 +17,7 @@ repositories {
     mavenCentral()
 
     maven("https://maven.pkg.jetbrains.space/camdenorrb/p/twelveoclock-dev/maven") {
-        name = "Camden's"
+        name = "Camdenorrb"
     }
 
     maven("https://dl.bintray.com/kotlin/kotlinx/") {
@@ -32,7 +32,7 @@ dependencies {
 
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1")
-    compile("me.camdenorrb:KCommons:1.2.1")
+    implementation("me.camdenorrb:KCommons:1.2.1")
 }
 
 idea {
@@ -45,16 +45,6 @@ idea {
 
 tasks {
 
-    compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
-    }
-    wrapper {
-        gradleVersion = "6.7.1"
-    }
-
     val sourcesJar by creating(Jar::class) {
         dependsOn(JavaPlugin.CLASSES_TASK_NAME)
         archiveClassifier.set("sources")
@@ -64,6 +54,16 @@ tasks {
         dependsOn(JavaPlugin.JAVADOC_TASK_NAME)
         archiveClassifier.set("javadoc")
         from(getByName("javadoc"))
+    }
+
+    compileKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
+    compileTestKotlin {
+        kotlinOptions.jvmTarget = "1.8"
+    }
+    wrapper {
+        gradleVersion = "6.7.1"
     }
     artifacts {
         add("archives", sourcesJar)
