@@ -2,8 +2,8 @@ package me.camdenorrb.netlius.net
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import me.camdenorrb.kcommons.io.ByteBufferReaderChannel
 import me.camdenorrb.netlius.Netlius
-import me.camdenorrb.netlius.ext.decodeToString
 import java.io.EOFException
 import java.net.StandardSocketOptions
 import java.nio.BufferUnderflowException
@@ -11,8 +11,6 @@ import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousCloseException
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
@@ -27,7 +25,8 @@ import kotlin.coroutines.suspendCoroutine
 typealias ClientListener = (Client) -> Unit
 
 // TODO: Implement compression
-class Client internal constructor(channel: AsynchronousSocketChannel, val byteBufferPool: DirectByteBufferPool) {
+// TODO: Add timeout option for everything
+class Client internal constructor(channel: AsynchronousSocketChannel, val byteBufferPool: DirectByteBufferPool) : ByteBufferReaderChannel {
 
     val packetQueue = ConcurrentLinkedQueue<Packet>()
 
@@ -61,88 +60,43 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
 
     //This seems to cause issues
     // TODO: Check for InterruptedByTimeoutException and disconnect if so
-    suspend inline fun <T : Any> read(size: Int, block: ByteBuffer.() -> T): T {
+    override suspend inline fun <T> suspendRead(size: Int, block: ByteBuffer.() -> T): T {
 
         byteBufferPool.take(size) { byteBuffer ->
-
-            if (IS_DEBUGGING) {
-                println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
-            }
-
-            try {
-
-                readLock.withLock {
-                    suspendCoroutine<Unit> { continuation ->
-                        channel.read(byteBuffer, 30, TimeUnit.SECONDS, continuation, ReadCompletionHandler)
-                    }
-                }
-
-                if (IS_DEBUGGING) {
-                    println("Read: $size bytes")
-                }
-
-                return block(byteBuffer.flip())
-            }
-            catch (ex: Exception) {
-                close()
-                throw ex
-            }
-
+            readTo(size, byteBuffer)
+            return block(byteBuffer.flip())
         }
 
         error("Unable to take from ByteBufferPool?")
     }
 
-    suspend fun readByte(): Byte {
-        return read(Byte.SIZE_BYTES) { get() }
-    }
+    suspend fun readTo(size: Int, byteBuffer: ByteBuffer, timeoutMS: Long = 30_000) {
 
-    suspend fun readBytes(n: Int): ByteArray {
-        return read(n * Byte.SIZE_BYTES) {
-            ByteArray(n) {
-                get(it)
+        if (IS_DEBUGGING) {
+            println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
+        }
+
+        try {
+
+            if (size > 0) {
+                readLock.withLock {
+                    suspendCoroutine<Unit> { continuation ->
+                        channel.read(byteBuffer, timeoutMS, TimeUnit.MILLISECONDS, continuation, ReadCompletionHandler)
+                    }
+                }
             }
+
+            if (IS_DEBUGGING) {
+                println("Read: $size bytes")
+            }
+
+        }
+        catch (ex: Exception) {
+            close()
+            throw ex
         }
     }
 
-    suspend fun readBoolean(): Boolean {
-        return when (val read = readByte().toInt()) {
-
-            0 -> false
-            1 -> true
-
-            else -> error("Unable to read boolean '$read'")
-        }
-    }
-
-    suspend fun readShort(): Short {
-        return read(Short.SIZE_BYTES) { short }
-    }
-
-    suspend fun readInt(): Int {
-        return read(Int.SIZE_BYTES) { int }
-    }
-
-    suspend fun readLong(): Long {
-        return read(Long.SIZE_BYTES) { long }
-    }
-
-    suspend fun readFloat(): Float {
-        return read(Float.SIZE_BYTES) { float }
-    }
-
-    suspend fun readDouble(): Double {
-        return read(Double.SIZE_BYTES) { double }
-    }
-
-    suspend fun readString(encoding: Charset = StandardCharsets.UTF_8): String {
-
-        val size = readShort().toInt()
-
-        return read(size) {
-            this.decodeToString(encoding)
-        }
-    }
 
     fun queue(vararg packets: Packet) {
         packetQueue.addAll(packets)

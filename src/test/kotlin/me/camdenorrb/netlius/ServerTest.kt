@@ -9,12 +9,26 @@ import kotlin.test.Test
 class ServerTest {
 
     @Test
+    fun `novae server test`() {
+
+        val server = Netlius.server("127.0.0.1", 12345)
+
+        server.onConnect {
+            while (true) {
+                println(it.suspendReadBytes(17).contentToString())
+            }
+        }
+
+        Thread.sleep(1000000)
+    }
+
+    @Test
     fun `rust server test`() {
 
         val server = Netlius.server("127.0.0.1", 12345)
 
         server.onConnect {
-            println(it.readString())
+            println(it.suspendReadString())
             it.queueAndFlush(Packet().string("Meow"))
         }
 
@@ -33,7 +47,7 @@ class ServerTest {
 
             while (true) {
 
-                val read = readByte().toInt()
+                val read = suspendReadByte().toInt()
                 val value = read and 127
 
                 result = result or (value shl (7 * numRead))
@@ -84,9 +98,10 @@ class ServerTest {
 
         suspend fun Client.readMCString(): String {
             val size = readVarInt()
-            return readBytes(size).decodeToString()
-        }
 
+            // TODO: Make a readString that takes in size
+            return suspendReadBytes(size).decodeToString()
+        }
 
         data class PacketHeader(val packetLength: Int, val packetID: Int)
 
@@ -105,7 +120,7 @@ class ServerTest {
 
                     val protocolVersion = client.readVarInt()
                     val serverAddress = client.readMCString()
-                    val serverPort = client.readShort()
+                    val serverPort = client.suspendReadShort()
                     val nextState = client.readVarInt()
 
                     val handshakePacket = Packet().mcString(
@@ -146,7 +161,7 @@ class ServerTest {
                         "Invalid ping packet! $pingPacketHeader"
                     }
 
-                    val pingPacket = Packet().long(client.readLong()).prepend {
+                    val pingPacket = Packet().long(client.suspendReadLong()).prepend {
                         varInt(0x01)
                     }.prepend {
                         varInt(size)

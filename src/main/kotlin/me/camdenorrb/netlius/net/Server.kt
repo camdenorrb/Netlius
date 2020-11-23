@@ -25,9 +25,9 @@ class Server internal constructor(val ip: String, val port: Int) {
     val clients = ConcurrentLinkedQueue<Client>()
 
 
-    private var onStartListeners   = mutableListOf<Server.() -> Unit>()
+    private var onStartListeners = mutableListOf<Server.() -> Unit>()
 
-    private var onStopListeners    = mutableListOf<Server.() -> Unit>()
+    private var onStopListeners  = mutableListOf<Server.() -> Unit>()
 
     // TODO: Add a disconnect listener
     private var onConnectListeners = mutableListOf<suspend (Client) -> Unit>()

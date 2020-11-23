@@ -26,7 +26,7 @@ class Benchmark {
         server.onConnect { client ->
             repeat(DEFAULT_CYCLES * 2) {
                 serverTimeMS += measureNanoTime {
-                    client.readByte()
+                    client.suspendReadByte()
                 }
             }
         }

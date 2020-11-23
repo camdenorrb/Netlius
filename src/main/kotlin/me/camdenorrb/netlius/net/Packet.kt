@@ -52,6 +52,10 @@ class Packet {
         return addWriteValue(Double.SIZE_BYTES, double)
     }
 
+    fun byteBuffer(byteBuffer: ByteBuffer): Packet {
+        return addWriteValue(byteBuffer.remaining(), byteBuffer)
+    }
+
     fun string(string: String): Packet {
 
         val bytes = string.encodeToByteArray()
@@ -85,6 +89,7 @@ class Packet {
                 is Long -> buffer.putLong(value)
                 is Float -> buffer.putFloat(value)
                 is Double -> buffer.putDouble(value)
+                is ByteBuffer -> buffer.put(value)
             }
         }
     }

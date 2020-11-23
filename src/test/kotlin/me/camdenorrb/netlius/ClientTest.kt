@@ -16,7 +16,7 @@ class ClientTest {
 
         server.onConnect { client ->
             while (client.channel.isOpen) {
-                println(client.readString())
+                println(client.suspendReadString())
             }
         }
 
@@ -38,7 +38,7 @@ class ClientTest {
 
         server.onConnect {
             while (true) {
-                it.read(Netlius.DEFAULT_BUFFER_SIZE) {
+                it.suspendRead(Netlius.DEFAULT_BUFFER_SIZE) {
                     bytesRead += bufferSizeAsLong
                 }
             }
@@ -72,7 +72,7 @@ class ClientTest {
 
         server.onConnect { client ->
             while (client.channel.isOpen) {
-                assertEquals("${client.readString()}${client.readString()}".also { println(it) }, "12")
+                assertEquals("${client.suspendReadString()}${client.suspendReadString()}".also { println(it) }, "12")
             }
         }
 
@@ -93,7 +93,7 @@ class ClientTest {
 
         server.onConnect { client ->
             while (client.channel.isOpen) {
-                assertEquals("${client.readString()}${client.readString()}${client.readString()}", "123")
+                assertEquals("${client.suspendReadString()}${client.suspendReadString()}${client.suspendReadString()}", "123")
                 succeeded = true
             }
         }
@@ -123,7 +123,7 @@ class ClientTest {
         server.onConnect { client ->
             println(measureTimeMillis {
                 repeat(7_000) {
-                    assertEquals(client.readString(), "Meow")
+                    assertEquals(client.suspendReadString(), "Meow")
                 }
             })
         }
@@ -153,8 +153,8 @@ class ClientTest {
 
         server.onConnect { client ->
 
-            assertEquals(client.readString(), "Meow")
-            assertEquals(client.readString(), "Test")
+            assertEquals(client.suspendReadString(), "Meow")
+            assertEquals(client.suspendReadString(), "Test")
 
             count += 1
         }
@@ -189,7 +189,7 @@ class ClientTest {
         runBlocking {
             try {
                 // This should auto close it as the server shouldn't be on
-                client.readByte()
+                client.suspendReadByte()
             }
             catch (ex: Exception) {
                 // Ignore

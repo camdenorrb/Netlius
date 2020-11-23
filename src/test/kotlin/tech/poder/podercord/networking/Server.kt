@@ -10,7 +10,7 @@ fun main() {
 
     server.onConnect {
         while(true) {
-            it.queueAndFlush(Packet().bytes(it.readBytes(12)))
+            it.queueAndFlush(Packet().bytes(it.suspendReadBytes(12)))
         }
     }
 

@@ -1,4 +1,4 @@
-package me.camdenorrb.netlius.net
+package me.camdenorrb.netlius.__deleted__
 
 /*
 import java.io.ByteArrayInputStream
