@@ -200,6 +200,26 @@ class ClientTest {
     }
 
     @Test
+    fun `read from closed client`() {
+
+        val server = Netlius.server("127.0.0.1", 12345, defaultTimeoutMS = Long.MAX_VALUE)
+        val client = Netlius.client("127.0.0.1", 12345, Long.MAX_VALUE)
+
+        server.onConnect {
+            println(it.suspendReadInt())
+        }
+
+        client.close()
+
+        runBlocking {
+            delay(10000)
+            Netlius.client("127.0.0.1", 12345, Long.MAX_VALUE).queueAndFlush(Packet().int(1))
+            delay(10000)
+        }
+
+    }
+
+    @Test
     fun `long read`() {
 
         val server = Netlius.server("127.0.0.1", 12345, defaultTimeoutMS = Long.MAX_VALUE)

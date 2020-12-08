@@ -67,6 +67,10 @@ class Server internal constructor(val ip: String, val port: Int, val defaultTime
                 client.channel.setOption(StandardSocketOptions.TCP_NODELAY, true)
                 client.channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
 
+                client.onDisconnect {
+                    clients.remove(it)
+                }
+
                 launch(Netlius.threadPoolDispatcher) {
                     try {
                         onConnectListeners.forEach { it(client) }
