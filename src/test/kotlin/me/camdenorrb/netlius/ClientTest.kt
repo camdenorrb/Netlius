@@ -199,6 +199,22 @@ class ClientTest {
         assert(!client.channel.isOpen)
     }
 
+    @Test
+    fun `long read`() {
+
+        val server = Netlius.server("127.0.0.1", 12345, defaultTimeoutMS = Long.MAX_VALUE)
+        val client = Netlius.client("127.0.0.1", 12345, Long.MAX_VALUE)
+
+        server.onConnect {
+            delay(30000)
+            it.queueAndFlush(Packet().boolean(true))
+        }
+
+        runBlocking {
+            println(client.suspendReadBoolean())
+        }
+    }
+
 
     // TODO: Test with a longer read timeout when you make that a configurable option... TSSK TSSSK
     /*

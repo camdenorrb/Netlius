@@ -20,7 +20,7 @@ import kotlin.coroutines.suspendCoroutine
 
 // TODO: Figure out how to detect disconnect
 // TODO: Add readTimeouts
-class Server internal constructor(val ip: String, val port: Int) {
+class Server internal constructor(val ip: String, val port: Int, val defaultTimeoutMS: Long = 30_000) {
 
     val clients = ConcurrentLinkedQueue<Client>()
 
@@ -59,13 +59,13 @@ class Server internal constructor(val ip: String, val port: Int) {
             while (isRunning) {
 
                 val client = suspendCoroutine<Client> { continuation ->
-                    channel.accept(continuation, AcceptCompletionHandler)
+                    channel.accept(continuation, AcceptCompletionHandler(defaultTimeoutMS))
                 }
 
                 client.channel.setOption(StandardSocketOptions.SO_RCVBUF, Netlius.DEFAULT_BUFFER_SIZE)
                 client.channel.setOption(StandardSocketOptions.SO_SNDBUF, Netlius.DEFAULT_BUFFER_SIZE)
-                client.channel.setOption(StandardSocketOptions.SO_KEEPALIVE, false)
                 client.channel.setOption(StandardSocketOptions.TCP_NODELAY, true)
+                client.channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
 
                 launch(Netlius.threadPoolDispatcher) {
                     try {
@@ -125,10 +125,10 @@ class Server internal constructor(val ip: String, val port: Int) {
 
     }
 
-    object AcceptCompletionHandler : CompletionHandler<AsynchronousSocketChannel, Continuation<Client>> {
+    class AcceptCompletionHandler(val defaultTimeoutMS: Long) : CompletionHandler<AsynchronousSocketChannel, Continuation<Client>> {
 
         override fun completed(result: AsynchronousSocketChannel, attachment: Continuation<Client>) {
-            attachment.resume(Client(result, Netlius.byteBufferPool))
+            attachment.resume(Client(result, Netlius.byteBufferPool, defaultTimeoutMS))
         }
 
         override fun failed(exc: Throwable, attachment: Continuation<Client>) {

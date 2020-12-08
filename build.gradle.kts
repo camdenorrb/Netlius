@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "me.camdenorrb"
-version = "1.0-SNAPSHOT"
+version = "1.0.3"
 
 repositories {
 
@@ -27,12 +27,12 @@ repositories {
 
 dependencies {
 
-    testImplementation(kotlin("test-junit"))
-    testImplementation("org.jetbrains.kotlinx:atomicfu:0.14.4")
-
     implementation(kotlin("stdlib-jdk8"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1")
     implementation("me.camdenorrb:KCommons:1.2.1")
+
+    testImplementation(kotlin("test-junit"))
+    testImplementation("org.jetbrains.kotlinx:atomicfu:0.14.4")
 }
 
 idea {

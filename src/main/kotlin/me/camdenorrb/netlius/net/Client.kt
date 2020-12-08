@@ -26,7 +26,11 @@ typealias ClientListener = (Client) -> Unit
 
 // TODO: Implement compression
 // TODO: Add timeout option for everything
-class Client internal constructor(channel: AsynchronousSocketChannel, val byteBufferPool: DirectByteBufferPool) : ByteBufferReaderChannel {
+class Client internal constructor(
+    channel: AsynchronousSocketChannel,
+    val byteBufferPool: DirectByteBufferPool,
+    val defaultTimeoutMS: Long = 30_000
+) : ByteBufferReaderChannel {
 
     val packetQueue = ConcurrentLinkedQueue<Packet>()
 
@@ -46,7 +50,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
         channel.setOption(StandardSocketOptions.SO_RCVBUF, Netlius.DEFAULT_BUFFER_SIZE)
         channel.setOption(StandardSocketOptions.SO_SNDBUF, Netlius.DEFAULT_BUFFER_SIZE)
         channel.setOption(StandardSocketOptions.TCP_NODELAY, true)
-        channel.setOption(StandardSocketOptions.SO_KEEPALIVE, false)
+        channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
     }
 
     fun onConnect(block: (Client) -> Unit) {
@@ -63,14 +67,14 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
     override suspend inline fun <T> suspendRead(size: Int, block: ByteBuffer.() -> T): T {
 
         byteBufferPool.take(size) { byteBuffer ->
-            readTo(size, byteBuffer)
+            readTo(size, byteBuffer, defaultTimeoutMS)
             return block(byteBuffer.flip())
         }
 
         error("Unable to take from ByteBufferPool?")
     }
 
-    suspend fun readTo(size: Int, byteBuffer: ByteBuffer, timeoutMS: Long = 30_000) {
+    suspend fun readTo(size: Int, byteBuffer: ByteBuffer, timeoutMS: Long = defaultTimeoutMS) {
 
         if (IS_DEBUGGING) {
             println("Reading: $size bytes, Remaining: ${byteBuffer.remaining()}")
@@ -102,12 +106,12 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
         packetQueue.addAll(packets)
     }
 
-    suspend fun queueAndFlush(vararg packets: Packet) {
+    suspend fun queueAndFlush(vararg packets: Packet, timeoutMS: Long = defaultTimeoutMS) {
         queue(*packets)
-        flush()
+        flush(timeoutMS)
     }
 
-    suspend fun flush() {
+    suspend fun flush(timeoutMS: Long = defaultTimeoutMS) {
         packetQueue.clearingForEach { packet ->
             byteBufferPool.take(packet.size) { byteBuffer ->
 
@@ -117,7 +121,7 @@ class Client internal constructor(channel: AsynchronousSocketChannel, val byteBu
                 try {
                     writeLock.withLock {
                         suspendCoroutine<Unit> { continuation ->
-                            channel.write(byteBuffer, 30, TimeUnit.SECONDS, continuation, WriteCompletionHandler)
+                            channel.write(byteBuffer, timeoutMS, TimeUnit.MILLISECONDS, continuation, WriteCompletionHandler)
                         }
                     }
                 }

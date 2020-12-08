@@ -25,15 +25,15 @@ object Netlius {
     internal val threadPoolDispatcher = Executors.newFixedThreadPool(max(Runtime.getRuntime().availableProcessors(), 64)).asCoroutineDispatcher()
 
 
-    fun client(ip: String, port: Int): Client {
+    fun client(ip: String, port: Int, defaultTimeoutMS: Long = 30_000): Client {
 
         val channel = AsynchronousSocketChannel.open()
-        channel.connect(InetSocketAddress(ip, port)).get(30, TimeUnit.SECONDS)
+        channel.connect(InetSocketAddress(ip, port)).get(defaultTimeoutMS, TimeUnit.MILLISECONDS)
 
-        return Client(channel, byteBufferPool)
+        return Client(channel, byteBufferPool, defaultTimeoutMS)
     }
 
-    suspend fun clientSuspending(ip: String, port: Int): Client {
+    suspend fun clientSuspending(ip: String, port: Int, defaultTimeoutMS: Long = 30_000): Client {
 
         lateinit var channel: AsynchronousSocketChannel
 
@@ -47,11 +47,11 @@ object Netlius {
             throw ex // Rethrow because coroutines..... :C
         }
 
-        return Client(channel, byteBufferPool)
+        return Client(channel, byteBufferPool, defaultTimeoutMS)
     }
 
-    fun server(ip: String, port: Int, autoStart: Boolean = true): Server {
-        return Server(ip, port).apply { if (autoStart) start() }
+    fun server(ip: String, port: Int, autoStart: Boolean = true, defaultTimeoutMS: Long = 30_000): Server {
+        return Server(ip, port, defaultTimeoutMS).apply { if (autoStart) start() }
     }
 
     fun stop() {

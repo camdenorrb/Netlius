@@ -149,7 +149,7 @@ class Benchmark {
                 (1..DEFAULT_CYCLES).map {
                     async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
                         totalAllocateTime += (measureNanoTime {
-                            ByteBuffer.allocateDirect(8192)
+                            ByteBuffer.allocateDirect(1280000)
                         })
                     }
                 }.awaitAll()
