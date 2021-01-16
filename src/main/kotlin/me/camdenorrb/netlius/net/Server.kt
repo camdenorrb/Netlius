@@ -76,7 +76,7 @@ class Server internal constructor(val ip: String, val port: Int, val defaultTime
                         onConnectListeners.forEach { it(client) }
                     } catch (ex: Exception) {
                         if (!isClosing && ex !is EOFException) {
-                            ex.printStackTrace()
+                            throw ex
                         }
                     }
                 }

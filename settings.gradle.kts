@@ -1,3 +1,4 @@
+/*
 pluginManagement {
     repositories {
         mavenCentral()
@@ -5,6 +6,7 @@ pluginManagement {
         maven("https://dl.bintray.com/kotlin/kotlin-eap")
     }
 }
+*/
 
 rootProject.name = "Netlius"
 

@@ -1,12 +1,7 @@
-import java.io.FileInputStream
-import java.util.*
-
 plugins {
-    java
     idea
-    maven
     `maven-publish`
-    kotlin("jvm") version "1.4.10"
+    kotlin("jvm") version "1.4.21"
 }
 
 group = "me.camdenorrb"
@@ -28,11 +23,11 @@ repositories {
 dependencies {
 
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
     implementation("me.camdenorrb:KCommons:1.2.1")
 
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.jetbrains.kotlinx:atomicfu:0.14.4")
+    testImplementation("org.jetbrains.kotlinx:atomicfu:0.15.0")
 }
 
 idea {
@@ -85,15 +80,13 @@ publishing {
             url = uri("https://maven.pkg.jetbrains.space/camdenorrb/p/twelveoclock-dev/maven")
 
             credentials {
-
-                val secretProperties = Properties().apply {
-                    load(FileInputStream("secret-gradle.properties"))
+                project.properties["twelveoclockMavenUsername"]?.let { twelveoclockMavenUsername ->
+                    username = twelveoclockMavenUsername.toString()
                 }
-
-                username = secretProperties["username"].toString()
-                password = secretProperties["password"].toString()
+                project.properties["twelveoclockMavenPassword"]?.let { twelveoclockMavenPassword ->
+                    username = twelveoclockMavenPassword.toString()
+                }
             }
-
         }
     }
 }
