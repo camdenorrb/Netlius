@@ -84,7 +84,7 @@ publishing {
                     username = twelveoclockMavenUsername.toString()
                 }
                 project.properties["twelveoclockMavenPassword"]?.let { twelveoclockMavenPassword ->
-                    username = twelveoclockMavenPassword.toString()
+                    password = twelveoclockMavenPassword.toString()
                 }
             }
         }
