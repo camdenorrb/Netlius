@@ -1,5 +1,6 @@
 package me.camdenorrb.netlius
 
+import kotlinx.coroutines.*
 import me.camdenorrb.netlius.net.Client
 import me.camdenorrb.netlius.net.Packet
 import java.util.concurrent.ExecutorService
@@ -7,6 +8,40 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 
 class ServerTest {
+
+    @Test
+    fun `multithreaded test`() {
+
+        val server = Netlius.server("127.0.0.1", 12345, defaultTimeoutMS = Long.MAX_VALUE)
+
+        val clients = List(3) {
+            Netlius.client("127.0.0.1", 12345, Long.MAX_VALUE)
+        }
+
+        server.onConnect { serverClient ->
+            runBlocking {
+                (1..1_000).map {
+                    async(Dispatchers.IO, CoroutineStart.LAZY) {
+                        serverClient.queueAndFlush(Packet().string("wedijewodjowidoidwoid"))
+                    }
+                }.awaitAll()
+            }
+        }
+
+        runBlocking {
+            clients.map { client ->
+                async(Dispatchers.IO, CoroutineStart.LAZY) {
+                    repeat(1_000) {
+                        println("Here $it")
+                        check(client.suspendReadString() == "wedijewodjowidoidwoid") {
+                            "Malformed Packet"
+                        }
+                    }
+                }
+            }.awaitAll()
+        }
+
+    }
 
     @Test
     fun `novae server test`() {

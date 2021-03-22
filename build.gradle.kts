@@ -1,11 +1,11 @@
 plugins {
     idea
     `maven-publish`
-    kotlin("jvm") version "1.4.21"
+    kotlin("jvm") version "1.4.31"
 }
 
 group = "me.camdenorrb"
-version = "1.0.4"
+version = "1.0.6"
 
 repositories {
 
@@ -23,7 +23,7 @@ repositories {
 dependencies {
 
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
     implementation("me.camdenorrb:KCommons:1.2.1")
 
     testImplementation(kotlin("test-junit"))
@@ -58,7 +58,7 @@ tasks {
         kotlinOptions.jvmTarget = "1.8"
     }
     wrapper {
-        gradleVersion = "6.7.1"
+        gradleVersion = "6.8.3"
     }
     artifacts {
         add("archives", sourcesJar)

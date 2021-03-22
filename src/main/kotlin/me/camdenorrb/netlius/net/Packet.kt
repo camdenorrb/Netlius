@@ -12,10 +12,10 @@ class Packet {
     internal var isPrepending = false
 
     @PublishedApi
-    internal val writeQueue = mutableListOf<WriteValue>()
+    internal val writeQueue = mutableListOf<Any>()
 
     @PublishedApi
-    internal val prependWriteQueue = mutableListOf<WriteValue>()
+    internal val prependWriteQueue = mutableListOf<Any>()
 
 
     // Numbers
@@ -70,18 +70,18 @@ class Packet {
         this.size += size
 
         if (isPrepending) {
-            prependWriteQueue.add(WriteValue(size, value))
+            prependWriteQueue.add(value)
         }
         else {
-            writeQueue.add(WriteValue(size, value))
+            writeQueue.add(value)
         }
 
         return this
     }
 
     fun writeToBuffer(buffer: ByteBuffer) {
-        writeQueue.forEach {
-            when (val value = it.value) {
+        writeQueue.forEach { value ->
+            when (value) {
                 is Byte -> buffer.put(value)
                 is ByteArray -> buffer.put(value)
                 is Short -> buffer.putShort(value)
@@ -108,7 +108,7 @@ class Packet {
 
 
 
-    data class WriteValue(val size: Int, val value: Any)
+    //data class WriteValue(val size: Int, val value: Any)
 
     /*
     data class WriteTask(val size: Int, val block: (ByteBuffer) -> Unit) {

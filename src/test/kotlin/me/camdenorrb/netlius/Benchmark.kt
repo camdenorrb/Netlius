@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import me.camdenorrb.netlius.net.DirectByteBufferPool
 import me.camdenorrb.netlius.net.Packet
 import tech.poder.podercord.networking.MooDirectByteBufferPool
 import java.nio.ByteBuffer
@@ -52,23 +53,27 @@ class Benchmark {
     @Test
     fun katBufferConcurrentSpeedTest() {
 
-        repeat(10) {
+        repeat(1) {
 
-            //val pool = DirectByteBufferPool(20)
+            val pool = DirectByteBufferPool(20)
             val poolReallocateTime = atomic(0L)
 
             runBlocking {
                 (1..DEFAULT_CYCLES).map {
                     async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
                         poolReallocateTime += (measureNanoTime {
-                            //pool.take(DEFAULT_BUFFER_SIZE) {}
+                            pool.take(DEFAULT_BUFFER_SIZE) {}
                         })
                     }
                 }.awaitAll()
             }
 
             println(poolReallocateTime.value / DEFAULT_CYCLES)
+            check(pool.byteBuffers.size == 20) {
+                "Didn't get back all bytebuffers"
+            }
         }
+
     }
 
     @Test
@@ -146,16 +151,17 @@ class Benchmark {
             val totalAllocateTime = atomic(0L)
 
             runBlocking {
-                (1..DEFAULT_CYCLES).map {
+                (1..100_000).map {
                     async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
                         totalAllocateTime += (measureNanoTime {
+                            // Takes 7 milliseconds per iteration
                             ByteBuffer.allocateDirect(1280000)
                         })
                     }
                 }.awaitAll()
             }
 
-            println(totalAllocateTime.value / DEFAULT_CYCLES)
+            println(totalAllocateTime.value / 100_000)
         }
     }
 

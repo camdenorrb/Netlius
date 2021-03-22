@@ -137,7 +137,7 @@ fun main() = runBlocking(Client.threadPoolDispatcher) {
 object Handler : CompletionHandler<Int, Continuation<Unit>> {
 
     override fun completed(result: Int, attachment: Continuation<Unit>) {
-        attachment.resume(Unit.INSTANCE)
+        attachment.resume(Unit)
     }
 
     override fun failed(exc: Throwable, attachment: Continuation<Unit>) {
@@ -147,11 +147,11 @@ object Handler : CompletionHandler<Int, Continuation<Unit>> {
 
         when (exc::class.simpleName) {
             "IOException", "IllegalStateException" -> attachment.resumeWithException(exc)
-            "ClosedChannelException", "AsynchronousCloseException" -> attachment.resume(Unit.INSTANCE)
+            "ClosedChannelException", "AsynchronousCloseException" -> attachment.resume(Unit)
             else -> {
                 println(exc::class.simpleName)
                 exc.printStackTrace()
-                attachment.resume(Unit.INSTANCE)
+                attachment.resume(Unit)
             }
         }
     }

@@ -13,22 +13,32 @@ class DirectByteBufferPool(size: Int, val bufferSize: Int = Netlius.DEFAULT_BUFF
 
     inline fun take(size: Int, block: (ByteBuffer) -> Unit) {
 
-        val byteBuffer = if (size > bufferSize) {
+        if (size > bufferSize) {
 
             if (DEBUG) {
                 println("Allocated a new bytebuffer. Size: $size Count: ${byteBuffers.size}")
             }
 
-            ByteBuffer.allocateDirect(size)
+            block(ByteBuffer.allocateDirect(size))
+            return
+        }
+
+        var byteBuffer = byteBuffers.poll()?.limit(size)
+
+        if (byteBuffer == null) {
+
+            if (DEBUG) {
+                println("Allocated a new bytebuffer. Size: $size Count: ${byteBuffers.size}")
+            }
+
+            byteBuffer = ByteBuffer.allocateDirect(size)!!
         }
         else {
-
             if (DEBUG) {
                 println("Took bytebuffer. Size: $size Count: ${byteBuffers.size}")
             }
-
-            byteBuffers.poll()?.limit(size) ?: ByteBuffer.allocateDirect(size)
         }
+
 
         // Try + Finally so the buffer gets returned even with error
         try {

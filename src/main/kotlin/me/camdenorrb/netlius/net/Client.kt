@@ -64,7 +64,7 @@ class Client internal constructor(
 
     //This seems to cause issues
     // TODO: Check for InterruptedByTimeoutException and disconnect if so
-    override suspend inline fun <T> suspendRead(size: Int, block: ByteBuffer.() -> T): T {
+    override suspend fun <T> suspendRead(size: Int, block: ByteBuffer.() -> T): T {
 
         byteBufferPool.take(size) { byteBuffer ->
             readTo(size, byteBuffer, defaultTimeoutMS)
