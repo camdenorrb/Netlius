@@ -4,6 +4,8 @@ import kotlinx.coroutines.runBlocking
 
 // This project should essentially be a bridge between the driver and JVM along with some coroutines
 // TODO: Could potentially use https://github.com/rambodrahmani/linux-pspat for now
+
+// TODO: Look at https://ktor.io/docs/servers-raw-sockets.html#server
 object Main {
 
     @JvmStatic

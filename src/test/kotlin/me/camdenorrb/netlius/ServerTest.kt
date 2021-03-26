@@ -1,5 +1,6 @@
 package me.camdenorrb.netlius
 
+/*
 import kotlinx.coroutines.*
 import me.camdenorrb.netlius.net.Client
 import me.camdenorrb.netlius.net.Packet
@@ -20,7 +21,7 @@ class ServerTest {
 
         server.onConnect { serverClient ->
             runBlocking {
-                (1..1_000).map {
+                (1..1_000_000).map {
                     async(Dispatchers.IO, CoroutineStart.LAZY) {
                         serverClient.queueAndFlush(Packet().string("wedijewodjowidoidwoid"))
                     }
@@ -31,7 +32,7 @@ class ServerTest {
         runBlocking {
             clients.map { client ->
                 async(Dispatchers.IO, CoroutineStart.LAZY) {
-                    repeat(1_000) {
+                    repeat(1_000_000) {
                         println("Here $it")
                         check(client.suspendReadString() == "wedijewodjowidoidwoid") {
                             "Malformed Packet"
@@ -41,6 +42,7 @@ class ServerTest {
             }.awaitAll()
         }
 
+        server.stop()
     }
 
     @Test
@@ -54,7 +56,9 @@ class ServerTest {
             }
         }
 
-        Thread.sleep(1000000)
+        Thread.sleep(1000)
+        server.stop()
+
     }
 
     @Test
@@ -67,7 +71,8 @@ class ServerTest {
             it.queueAndFlush(Packet().string("Meow"))
         }
 
-        Thread.sleep(1000000)
+        Thread.sleep(1000)
+        server.stop()
     }
 
     @Test
@@ -207,7 +212,6 @@ class ServerTest {
                 }
 
             }
-
         }
 
         server.onConnect { client ->
@@ -218,6 +222,9 @@ class ServerTest {
 
         // TODO: Make a test like this that makes sure it waited 1 minute before terminating
         (Netlius.threadPoolDispatcher.executor as ExecutorService).awaitTermination(1, TimeUnit.MINUTES)
+        server.stop()
+
     }
 
 }
+*/

@@ -1,13 +1,77 @@
 package me.camdenorrb.netlius
 
+/*
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
+import me.camdenorrb.netlius.ext.toByteArray
 import me.camdenorrb.netlius.net.Packet
+import kotlin.coroutines.suspendCoroutine
+import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+
 class ClientTest {
+
+    @Test
+    fun ping() {
+
+        val server = Netlius.server("127.0.0.1", 12345)
+
+        server.onConnect { client ->
+            while (client.channel.isOpen) {
+                val sendTime = System.currentTimeMillis()
+                client.queueAndFlush(Packet().byte(0))
+                client.suspendReadByte()
+                println(System.currentTimeMillis() - sendTime)
+            }
+        }
+
+        val client = Netlius.client("127.0.0.1", 12345)
+
+        runBlocking {
+            repeat(1_000) {
+                client.queueAndFlush(Packet().byte(0))
+            }
+            delay(10000)
+        }
+
+        server.stop()
+    }
+
+    @Test
+    fun `the 5 big packets`() {
+
+        val originalData = Random.nextBytes(100_000)
+        val packet = Packet().bytes(originalData)
+
+        val server = Netlius.server("127.0.0.1", 12345)
+
+        server.onConnect { client ->
+            while (client.channel.isOpen) {
+                client.suspendRead(100_000) {
+                    println(originalData.contentEquals(this.toByteArray()))
+                }
+            }
+        }
+
+        runBlocking {
+
+            (0..5).map {
+                async(start = CoroutineStart.LAZY) {
+                    val client = Netlius.client("127.0.0.1", 12345)
+                    println("Sending")
+                    client.queueAndFlush(packet)
+                    println("Sent")
+                }
+            }.awaitAll()
+
+            delay(10_000_000)
+        }
+
+        server.stop()
+    }
 
     @Test
     fun `client single message test`() {
@@ -27,6 +91,8 @@ class ClientTest {
             client.queueAndFlush(packet)
             delay(10000)
         }
+
+        server.stop()
     }
 
     @Test
@@ -43,7 +109,6 @@ class ClientTest {
                 }
             }
         }
-
 
         repeat(100) {
 
@@ -63,6 +128,8 @@ class ClientTest {
                 bytesRead.getAndSet(0)
             }
         }
+
+        server.stop()
     }
 
     @Test
@@ -83,6 +150,8 @@ class ClientTest {
             client.queueAndFlush(packet)
             delay(10000)
         }
+
+        server.stop()
     }
 
     @Test
@@ -112,6 +181,8 @@ class ClientTest {
         }
 
         assert(succeeded)
+
+        server.stop()
     }
 
 
@@ -143,6 +214,8 @@ class ClientTest {
         }
 
         delay(10_000)
+
+        server.stop()
     }
 
     @Test
@@ -171,6 +244,8 @@ class ClientTest {
         while (count.value != 1_000) {
             Thread.onSpinWait()
         }
+
+        server.stop()
     }
 
     // Takes 30 seconds to run due to timeout
@@ -197,6 +272,42 @@ class ClientTest {
         }
 
         assert(!client.channel.isOpen)
+
+    }
+
+    @Test
+    fun `server client auto close test`() {
+
+
+        val server = Netlius.server("127.0.0.1", 12345, defaultTimeoutMS = 1_000)
+        val client = Netlius.client("127.0.0.1", 12345)
+
+        var clientDisconnect = false
+        var serverClientDisconnect = false
+
+        client.onDisconnect {
+            clientDisconnect = true
+        }
+
+        server.onConnect {
+            client.close()
+            GlobalScope.launch {
+                it.suspendReadByte()
+            }
+            it.onDisconnect {
+                serverClientDisconnect = true
+            }
+        }
+
+        runBlocking {
+            delay(2_000)
+        }
+
+        assert(!client.channel.isOpen)
+        assert(clientDisconnect)
+        assert(serverClientDisconnect)
+
+        server.stop()
     }
 
     @Test
@@ -217,6 +328,7 @@ class ClientTest {
             delay(10000)
         }
 
+        server.stop()
     }
 
     @Test
@@ -233,6 +345,8 @@ class ClientTest {
         runBlocking {
             println(client.suspendReadBoolean())
         }
+
+        server.stop()
     }
 
 
@@ -295,3 +409,4 @@ class ClientTest {
     */
 
 }
+*/

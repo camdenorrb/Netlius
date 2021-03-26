@@ -1,11 +1,12 @@
 plugins {
     idea
     `maven-publish`
-    kotlin("jvm") version "1.4.31"
+    id("com.github.ben-manes.versions") version "0.38.0"
+    kotlin("jvm") version "1.5.0-M1"
 }
 
 group = "me.camdenorrb"
-version = "1.0.6"
+version = "1.0.13"
 
 repositories {
 
@@ -22,12 +23,12 @@ repositories {
 
 dependencies {
 
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
-    implementation("me.camdenorrb:KCommons:1.2.1")
+    //implementation("me.camdenorrb:KCommons:1.2.1")
 
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.jetbrains.kotlinx:atomicfu:0.15.0")
+    testImplementation("org.jetbrains.kotlinx:atomicfu:0.15.2")
 }
 
 idea {
@@ -51,14 +52,25 @@ tasks {
         from(getByName("javadoc"))
     }
 
+
     compileKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.useIR = true
+        sourceCompatibility = JavaVersion.VERSION_16.toString()
+        targetCompatibility = JavaVersion.VERSION_16.toString()
+        kotlinOptions.jvmTarget = JavaVersion.VERSION_15.toString()
+        kotlinOptions.apiVersion = "1.6"
+        kotlinOptions.languageVersion = "1.6"
     }
     compileTestKotlin {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.useIR = true
+        sourceCompatibility = JavaVersion.VERSION_16.toString()
+        targetCompatibility = JavaVersion.VERSION_16.toString()
+        kotlinOptions.jvmTarget = JavaVersion.VERSION_15.toString()
+        kotlinOptions.apiVersion = "1.6"
+        kotlinOptions.languageVersion = "1.6"
     }
     wrapper {
-        gradleVersion = "6.8.3"
+        gradleVersion = "7.0-rc-1"
     }
     artifacts {
         add("archives", sourcesJar)

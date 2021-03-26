@@ -1,16 +1,16 @@
 package me.camdenorrb.netlius
 
+/*
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import me.camdenorrb.netlius.net.DirectByteBufferPool
 import me.camdenorrb.netlius.net.Packet
 import tech.poder.podercord.networking.MooDirectByteBufferPool
 import java.nio.ByteBuffer
 import kotlin.system.measureNanoTime
+import kotlin.test.AfterTest
 import kotlin.test.Test
+
 
 class Benchmark {
 
@@ -49,6 +49,47 @@ class Benchmark {
             serverTimeMS.getAndSet(0)
         }
     }
+
+    @Test
+    fun `multithreaded echo benchmark`() {
+        val server = Netlius.server("127.0.0.1", 12345)
+        val client = Netlius.client("127.0.0.1", 12345)
+
+        val serverTimeMS = atomic(0L)
+        val clientTimeMS = atomic(0L)
+
+        val packet = Packet().byte(0)
+
+        server.onConnect { client ->
+            repeat(DEFAULT_CYCLES * 2) {
+                serverTimeMS += measureNanoTime {
+                    client.suspendReadByte()
+                }
+            }
+        }
+
+        repeat(2) {
+            runBlocking {
+
+                (0..DEFAULT_CYCLES).map {
+                    async(Dispatchers.IO) {
+                        clientTimeMS += measureNanoTime {
+                            client.queueAndFlush(packet)
+                        }
+                    }
+                }.awaitAll()
+
+
+                val averageNS = (clientTimeMS.value + serverTimeMS.value) / DEFAULT_CYCLES
+                println("$averageNS nanoseconds per call")
+
+                clientTimeMS.getAndSet(0)
+                serverTimeMS.getAndSet(0)
+            }
+        }
+    }
+
+
 
     @Test
     fun katBufferConcurrentSpeedTest() {
@@ -174,3 +215,5 @@ class Benchmark {
     }
 
 }
+
+*/
