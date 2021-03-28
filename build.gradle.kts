@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "me.camdenorrb"
-version = "1.0.13"
+version = "1.0.14"
 
 repositories {
 
@@ -58,16 +58,18 @@ tasks {
         sourceCompatibility = JavaVersion.VERSION_16.toString()
         targetCompatibility = JavaVersion.VERSION_16.toString()
         kotlinOptions.jvmTarget = JavaVersion.VERSION_15.toString()
-        kotlinOptions.apiVersion = "1.6"
-        kotlinOptions.languageVersion = "1.6"
+        kotlinOptions.apiVersion = "1.4"
+        kotlinOptions.languageVersion = "1.4"
+        kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=compatibility", "-Xmulti-platform", "-Xuse-experimental=kotlin.ExperimentalStdlibApi", "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes")
     }
     compileTestKotlin {
         kotlinOptions.useIR = true
         sourceCompatibility = JavaVersion.VERSION_16.toString()
         targetCompatibility = JavaVersion.VERSION_16.toString()
         kotlinOptions.jvmTarget = JavaVersion.VERSION_15.toString()
-        kotlinOptions.apiVersion = "1.6"
-        kotlinOptions.languageVersion = "1.6"
+        kotlinOptions.apiVersion = "1.4"
+        kotlinOptions.languageVersion = "1.4"
+        kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=compatibility", "-Xmulti-platform", "-Xuse-experimental=kotlin.ExperimentalStdlibApi", "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes")
     }
     wrapper {
         gradleVersion = "7.0-rc-1"
