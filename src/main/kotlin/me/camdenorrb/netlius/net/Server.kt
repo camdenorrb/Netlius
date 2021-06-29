@@ -27,7 +27,7 @@ class Server internal constructor(val ip: String, val port: Int, val defaultTime
 
     private var onStartListeners = mutableListOf<Server.() -> Unit>()
 
-    private var onStopListeners  = mutableListOf<Server.() -> Unit>()
+    private var onStopListeners = mutableListOf<Server.() -> Unit>()
 
     // TODO: Add a disconnect listener
     private var onConnectListeners = mutableListOf<suspend (Client) -> Unit>()

@@ -1,12 +1,12 @@
 plugins {
     idea
     `maven-publish`
-    id("com.github.ben-manes.versions") version "0.38.0"
-    kotlin("jvm") version "1.5.0-M1"
+    id("com.github.ben-manes.versions") version "0.39.0"
+    kotlin("jvm") version "1.5.20-RC"
 }
 
 group = "me.camdenorrb"
-version = "1.0.14"
+version = "1.0.16"
 
 repositories {
 
@@ -24,11 +24,11 @@ repositories {
 dependencies {
 
     implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
     //implementation("me.camdenorrb:KCommons:1.2.1")
 
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.jetbrains.kotlinx:atomicfu:0.15.2")
+    testImplementation("org.jetbrains.kotlinx:atomicfu:0.16.1")
 }
 
 idea {
@@ -58,8 +58,8 @@ tasks {
         sourceCompatibility = JavaVersion.VERSION_16.toString()
         targetCompatibility = JavaVersion.VERSION_16.toString()
         kotlinOptions.jvmTarget = JavaVersion.VERSION_15.toString()
-        kotlinOptions.apiVersion = "1.4"
-        kotlinOptions.languageVersion = "1.4"
+        kotlinOptions.apiVersion = "1.5"
+        kotlinOptions.languageVersion = "1.5"
         kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=compatibility", "-Xmulti-platform", "-Xuse-experimental=kotlin.ExperimentalStdlibApi", "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes")
     }
     compileTestKotlin {
@@ -67,12 +67,12 @@ tasks {
         sourceCompatibility = JavaVersion.VERSION_16.toString()
         targetCompatibility = JavaVersion.VERSION_16.toString()
         kotlinOptions.jvmTarget = JavaVersion.VERSION_15.toString()
-        kotlinOptions.apiVersion = "1.4"
-        kotlinOptions.languageVersion = "1.4"
+        kotlinOptions.apiVersion = "1.5"
+        kotlinOptions.languageVersion = "1.5"
         kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=compatibility", "-Xmulti-platform", "-Xuse-experimental=kotlin.ExperimentalStdlibApi", "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes")
     }
     wrapper {
-        gradleVersion = "7.0-rc-1"
+        gradleVersion = "7.0"
     }
     artifacts {
         add("archives", sourcesJar)
