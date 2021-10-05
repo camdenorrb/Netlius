@@ -2,11 +2,11 @@ plugins {
     idea
     `maven-publish`
     id("com.github.ben-manes.versions") version "0.39.0"
-    kotlin("jvm") version "1.5.20"
+    kotlin("jvm") version "1.5.31"
 }
 
 group = "me.camdenorrb"
-version = "1.0.16"
+version = "1.0.17"
 
 repositories {
 
@@ -24,11 +24,11 @@ repositories {
 dependencies {
 
     implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
     //implementation("me.camdenorrb:KCommons:1.2.1")
 
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.jetbrains.kotlinx:atomicfu:0.16.1")
+    testImplementation("org.jetbrains.kotlinx:atomicfu:0.16.3")
 }
 
 idea {

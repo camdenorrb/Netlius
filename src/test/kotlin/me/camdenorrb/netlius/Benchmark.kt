@@ -1,6 +1,6 @@
 package me.camdenorrb.netlius
 
-/*
+
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import me.camdenorrb.netlius.net.DirectByteBufferPool
@@ -8,7 +8,6 @@ import me.camdenorrb.netlius.net.Packet
 import tech.poder.podercord.networking.MooDirectByteBufferPool
 import java.nio.ByteBuffer
 import kotlin.system.measureNanoTime
-import kotlin.test.AfterTest
 import kotlin.test.Test
 
 
@@ -88,8 +87,6 @@ class Benchmark {
             }
         }
     }
-
-
 
     @Test
     fun katBufferConcurrentSpeedTest() {
@@ -195,7 +192,7 @@ class Benchmark {
                 (1..100_000).map {
                     async(Netlius.threadPoolDispatcher, CoroutineStart.LAZY) {
                         totalAllocateTime += (measureNanoTime {
-                            // Takes 7 milliseconds per iteration
+                            // Takes 7 milliseconds per iteration at size 1280000
                             ByteBuffer.allocateDirect(1280000)
                         })
                     }
@@ -215,5 +212,3 @@ class Benchmark {
     }
 
 }
-
-*/

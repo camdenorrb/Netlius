@@ -4,6 +4,7 @@ import me.camdenorrb.netlius.Netlius
 import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentLinkedQueue
 
+// TODO: Make a ByteBufferProvider api
 class DirectByteBufferPool(size: Int, val bufferSize: Int = Netlius.DEFAULT_BUFFER_SIZE) {
 
     val byteBuffers = ConcurrentLinkedQueue(List(size) {

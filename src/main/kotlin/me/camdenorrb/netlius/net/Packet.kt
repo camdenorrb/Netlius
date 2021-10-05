@@ -1,5 +1,6 @@
 package me.camdenorrb.netlius.net
 
+import me.camdenorrb.netlius.compression.base.Compression
 import java.nio.ByteBuffer
 
 // TODO: Add a way to add FileInputStream - No, just use multiple packets
@@ -7,6 +8,10 @@ class Packet {
 
     var size = 0
         private set
+
+    var compression: Compression? = null
+        private set
+
 
     @PublishedApi
     internal var isPrepending = false
@@ -52,9 +57,11 @@ class Packet {
         return addWriteValue(Double.SIZE_BYTES, double)
     }
 
+    // Be careful with mutability
     fun byteBuffer(byteBuffer: ByteBuffer): Packet {
         return addWriteValue(byteBuffer.remaining(), byteBuffer)
     }
+
 
     fun string(string: String): Packet {
 
@@ -62,6 +69,12 @@ class Packet {
 
         short(bytes.size.toShort())
         return bytes(bytes)
+    }
+
+
+    // Handle compression on write client side
+    fun setCompression(compression: Compression) {
+        this.compression = compression
     }
 
 

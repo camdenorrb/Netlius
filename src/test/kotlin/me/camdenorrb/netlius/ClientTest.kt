@@ -1,11 +1,9 @@
 package me.camdenorrb.netlius
 
-/*
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import me.camdenorrb.netlius.ext.toByteArray
 import me.camdenorrb.netlius.net.Packet
-import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 import kotlin.test.Test
@@ -110,22 +108,24 @@ class ClientTest {
             }
         }
 
-        repeat(100) {
+        runBlocking {
+            repeat(100) {
 
-            val packet = Packet().bytes(ByteArray(Netlius.DEFAULT_BUFFER_SIZE) { 1 })
-            val client = Netlius.client("127.0.0.1", 12345)
+                val packet = Packet().bytes(ByteArray(Netlius.DEFAULT_BUFFER_SIZE) { 1 })
+                val client = Netlius.client("127.0.0.1", 12345)
 
-            val job = GlobalScope.launch(Netlius.threadPoolDispatcher) {
-                while (true) {
-                    client.queueAndFlush(packet)
+                val job = CoroutineScope(Netlius.threadPoolDispatcher).launch {
+                    while (true) {
+                        client.queueAndFlush(packet)
+                    }
                 }
-            }
 
-            runBlocking {
-                job.cancel()
-                delay(1_000)
-                println("${bytesRead.value / 1024 / 1024}MB/s")
-                bytesRead.getAndSet(0)
+                runBlocking {
+                    job.cancel()
+                    delay(1_000)
+                    println("${bytesRead.value / 1024 / 1024}MB/s")
+                    bytesRead.getAndSet(0)
+                }
             }
         }
 
@@ -290,10 +290,13 @@ class ClientTest {
         }
 
         server.onConnect {
+
             client.close()
+
             GlobalScope.launch {
                 it.suspendReadByte()
             }
+
             it.onDisconnect {
                 serverClientDisconnect = true
             }
@@ -409,4 +412,3 @@ class ClientTest {
     */
 
 }
-*/
