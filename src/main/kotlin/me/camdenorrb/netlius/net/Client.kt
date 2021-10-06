@@ -55,11 +55,11 @@ class Client internal constructor(
     }
 
     fun onConnect(block: (Client) -> Unit) {
-        listeners.getOrPut(Event.CONNECT, { ConcurrentLinkedQueue() }) += block
+        listeners.getOrPut(Event.CONNECT) { ConcurrentLinkedQueue() } += block
     }
 
     fun onDisconnect(block: (Client) -> Unit) {
-        listeners.getOrPut(Event.DISCONNECT, { ConcurrentLinkedQueue() }) += block
+        listeners.getOrPut(Event.DISCONNECT) { ConcurrentLinkedQueue() } += block
     }
 
 
