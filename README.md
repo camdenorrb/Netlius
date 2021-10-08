@@ -3,7 +3,7 @@ A networking library for Kotlin
 
 ---
 
-#### Hello world Server + Client example
+#### "Hello world" Server + Client example
 ```kotlin
 fun main() {
 
