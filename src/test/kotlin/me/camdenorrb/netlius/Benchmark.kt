@@ -1,6 +1,6 @@
 package me.camdenorrb.netlius
 
-
+/*
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import me.camdenorrb.netlius.net.DirectByteBufferPool
@@ -15,8 +15,8 @@ class Benchmark {
 
     @Test
     fun `echo benchmark`() {
-        val server = Netlius.server("127.0.0.1", 12345)
-        val client = Netlius.client("127.0.0.1", 12345)
+        val server = Netlius.server("127.0.0.1", 10012)
+        val client = Netlius.client("127.0.0.1", 10012)
 
         val serverTimeMS = atomic(0L)
         val clientTimeMS = atomic(0L)
@@ -51,8 +51,8 @@ class Benchmark {
 
     @Test
     fun `multithreaded echo benchmark`() {
-        val server = Netlius.server("127.0.0.1", 12345)
-        val client = Netlius.client("127.0.0.1", 12345)
+        val server = Netlius.server("127.0.0.1", 10013)
+        val client = Netlius.client("127.0.0.1", 10013)
 
         val serverTimeMS = atomic(0L)
         val clientTimeMS = atomic(0L)
@@ -181,6 +181,7 @@ class Benchmark {
     }
 
 
+    /*
     @Test
     fun directByteBufferAllocateSpeedTest() {
 
@@ -201,14 +202,15 @@ class Benchmark {
 
             println(totalAllocateTime.value / 100_000)
         }
-    }
+    }*/
 
 
 
     companion object {
 
-        const val DEFAULT_CYCLES = 1_000_000
+        const val DEFAULT_CYCLES = 1_000
 
     }
 
 }
+*/
