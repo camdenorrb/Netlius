@@ -1,4 +1,7 @@
 # Netlius
+
+[![Build Status](https://drone.12oclock.dev/api/badges/camdenorrb/Netlius/status.svg)](https://drone.12oclock.dev/camdenorrb/Netlius)
+
 A networking library for Kotlin
 
 ---
