@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 import java.util.concurrent.ConcurrentLinkedQueue
 
 // TODO: Make a ByteBufferProvider api
+// TODO: Use MemorySegments if Java version is new enough otherwise Bytebuffer
 class DirectByteBufferPool(size: Int, val bufferSize: Int = Netlius.DEFAULT_BUFFER_SIZE) {
 
     val byteBuffers = ConcurrentLinkedQueue(List(size) {
