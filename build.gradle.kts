@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "me.camdenorrb"
-version = "1.0.17"
+version = "1.1.0"
 
 repositories {
 
