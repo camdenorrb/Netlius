@@ -55,9 +55,9 @@ tasks {
 
     compileKotlin {
         //kotlinOptions.useIR = true
-        sourceCompatibility = JavaVersion.VERSION_17.toString()
-        targetCompatibility = JavaVersion.VERSION_17.toString()
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_16.toString()
+        //sourceCompatibility = JavaVersion.VERSION_17.toString()
+        //targetCompatibility = JavaVersion.VERSION_17.toString()
+        kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
         //kotlinOptions.apiVersion = "1.5"
         //kotlinOptions.languageVersion = "1.5"
         kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=compatibility", "-Xmulti-platform", "-Xuse-experimental=kotlin.ExperimentalStdlibApi", "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes")
@@ -84,21 +84,6 @@ publishing {
             from(components["java"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["javadocJar"])
-        }
-    }
-    repositories {
-        maven {
-
-            url = uri("https://maven.pkg.jetbrains.space/camdenorrb/p/twelveoclock-dev/maven")
-
-            credentials {
-                project.properties["twelveoclockMavenUsername"]?.let { twelveoclockMavenUsername ->
-                    username = twelveoclockMavenUsername.toString()
-                }
-                project.properties["twelveoclockMavenPassword"]?.let { twelveoclockMavenPassword ->
-                    password = twelveoclockMavenPassword.toString()
-                }
-            }
         }
     }
 }
