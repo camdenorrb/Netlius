@@ -64,9 +64,9 @@ tasks {
     }
     compileTestKotlin {
         //kotlinOptions.useIR = true
-        sourceCompatibility = JavaVersion.VERSION_17.toString()
-        targetCompatibility = JavaVersion.VERSION_17.toString()
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_16.toString()
+        //sourceCompatibility = JavaVersion.VERSION_17.toString()
+        //targetCompatibility = JavaVersion.VERSION_17.toString()
+        kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
         //kotlinOptions.apiVersion = "1.5"
         //kotlinOptions.languageVersion = "1.5"
         kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=compatibility", "-Xmulti-platform", "-Xuse-experimental=kotlin.ExperimentalStdlibApi", "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes")
