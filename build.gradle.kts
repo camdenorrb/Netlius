@@ -2,7 +2,7 @@ plugins {
     idea
     `maven-publish`
     id("com.github.ben-manes.versions") version "0.43.0"
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.7.20"
 }
 
 group = "me.camdenorrb"
