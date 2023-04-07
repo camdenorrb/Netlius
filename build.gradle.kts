@@ -28,7 +28,7 @@ dependencies {
     //implementation("me.camdenorrb:KCommons:1.2.1")
 
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.jetbrains.kotlinx:atomicfu:0.19.0")
+    testImplementation("org.jetbrains.kotlinx:atomicfu:0.20.2")
 }
 
 idea {
