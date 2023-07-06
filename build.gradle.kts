@@ -53,6 +53,14 @@ tasks {
     }
 
 
+    compileJava {
+        sourceCompatibility = JavaVersion.VERSION_19.toString()
+        targetCompatibility = JavaVersion.VERSION_19.toString()
+    }
+    compileTestJava {
+        sourceCompatibility = JavaVersion.VERSION_19.toString()
+        targetCompatibility = JavaVersion.VERSION_19.toString()
+    }
     compileKotlin {
         //kotlinOptions.useIR = true
         //sourceCompatibility = JavaVersion.VERSION_17.toString()
