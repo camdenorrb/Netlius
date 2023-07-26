@@ -7,8 +7,9 @@ platform:
   arch: amd64
 
 steps:
-
-  - name: test
-    image: openjdk:19
+  - name: Build
+    image: openjdk:22-oracle
     commands:
+      - microdnf install findutils
+      - chmod +x gradlew
       - ./gradlew build
