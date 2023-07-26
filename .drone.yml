@@ -7,7 +7,8 @@ platform:
   arch: amd64
 
 steps:
-  - name: test
-    image: gradle:latest
+  - name: Build
+    image: openjdk:22
     commands:
-      - gradle build
+      - yum install -y findutils
+      - ./gradlew build
