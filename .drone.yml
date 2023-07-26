@@ -10,6 +10,5 @@ steps:
   - name: Build
     image: openjdk:22-oracle
     commands:
-      - uname -a
-      - cat /etc/os-release
+      - yum -y install findutils
       - ./gradlew build
