@@ -8,7 +8,7 @@ platform:
 
 steps:
   - name: Build
-    image: openjdk:22
+    image: openjdk:22-oracle
     commands:
       - yum install -y findutils
       - ./gradlew build
