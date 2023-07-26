@@ -1,9 +1,6 @@
 package tech.poder.podercord.networking
 
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import java.nio.ByteBuffer
-
+/*
 class MooDirectByteBufferPool(size: Int, val minBufferSize: Int = DEFAULT_BUFFER_SIZE) {
 
     val byteBuffers = ArrayDeque<ByteBuffer>(List(size) {
@@ -45,4 +42,4 @@ class MooDirectByteBufferPool(size: Int, val minBufferSize: Int = DEFAULT_BUFFER
             }
         }
     }
-}
+}*/
