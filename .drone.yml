@@ -11,4 +11,5 @@ steps:
     image: openjdk:22-oracle
     commands:
       - uname -a
+      - cat /etc/os-release
       - ./gradlew build
