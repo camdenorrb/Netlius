@@ -23,6 +23,9 @@ steps:
         elif command -v apk &> /dev/null; then
           echo "This system uses APK package manager"
           apk add --no-cache findutils
+        elif command -v microdnf &> /dev/null; then
+          echo "This system uses microDNF package manager"
+          microdnf install findutils
         else
           echo "Could not determine package manager"
         fi
