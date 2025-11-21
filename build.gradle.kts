@@ -1,34 +1,43 @@
 plugins {
     idea
     `maven-publish`
-    id("com.github.ben-manes.versions") version "0.47.0"
-    kotlin("jvm") version "1.9.0"
+    id("com.github.ben-manes.versions") version "0.53.0"
+    kotlin("jvm") version "2.2.21"
 }
 
 group = "me.camdenorrb"
-version = "1.1.0"
+version = "1.2.0"
 
 repositories {
 
     mavenCentral()
 
+    /*
     maven("https://maven.pkg.jetbrains.space/camdenorrb/p/twelveoclock-dev/maven") {
         name = "Camdenorrb"
     }
-
-    maven("https://dl.bintray.com/kotlin/kotlinx/") {
-        name = "KotlinX"
-    }
+    */
 }
 
 dependencies {
 
-    implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
     //implementation("me.camdenorrb:KCommons:1.2.1")
 
     testImplementation(kotlin("test-junit"))
-    testImplementation("org.jetbrains.kotlinx:atomicfu:0.21.0")
+    testImplementation("org.jetbrains.kotlinx:atomicfu:0.29.0")
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 idea {
@@ -41,48 +50,20 @@ idea {
 
 tasks {
 
-    val sourcesJar by creating(Jar::class) {
-        dependsOn(JavaPlugin.CLASSES_TASK_NAME)
-        archiveClassifier.set("sources")
-        from(sourceSets["main"].allSource)
-    }
-    val javadocJar by creating(Jar::class) {
-        dependsOn(JavaPlugin.JAVADOC_TASK_NAME)
-        archiveClassifier.set("javadoc")
-        from(getByName("javadoc"))
-    }
-
-
-    compileJava {
-        sourceCompatibility = JavaVersion.VERSION_19.toString()
-        targetCompatibility = JavaVersion.VERSION_19.toString()
-    }
-    compileTestJava {
-        sourceCompatibility = JavaVersion.VERSION_19.toString()
-        targetCompatibility = JavaVersion.VERSION_19.toString()
-    }
-    compileKotlin {
-        //kotlinOptions.useIR = true
-        //sourceCompatibility = JavaVersion.VERSION_17.toString()
-        //targetCompatibility = JavaVersion.VERSION_17.toString()
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_19.toString()
-        //kotlinOptions.apiVersion = "1.5"
-        //kotlinOptions.languageVersion = "1.5"
-        kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=all-compatibility", "-Xmulti-platform", "-Xuse-experimental=kotlin.ExperimentalStdlibApi", "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes")
-    }
-    compileTestKotlin {
-        //kotlinOptions.useIR = true
-        //sourceCompatibility = JavaVersion.VERSION_17.toString()
-        //targetCompatibility = JavaVersion.VERSION_17.toString()
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_19.toString()
-        //kotlinOptions.apiVersion = "1.5"
-        //kotlinOptions.languageVersion = "1.5"
-        kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=all-compatibility", "-Xmulti-platform", "-Xuse-experimental=kotlin.ExperimentalStdlibApi", "-Xuse-experimental=kotlin.ExperimentalUnsignedTypes")
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+            freeCompilerArgs.addAll(
+                "-opt-in=kotlin.ExperimentalStdlibApi",
+                "-opt-in=kotlin.ExperimentalUnsignedTypes"
+            )
+        }
     }
 
-    artifacts {
-        add("archives", sourcesJar)
-        add("archives", javadocJar)
+    wrapper {
+        gradleVersion = "9.2.1"
+        distributionType = Wrapper.DistributionType.BIN
+        distributionSha256Sum = "72f44c9f8ebcb1af43838f45ee5c4aa9c5444898b3468ab3f4af7b6076c5bc3f"
     }
 }
 
@@ -90,8 +71,6 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["javadocJar"])
         }
     }
 }
