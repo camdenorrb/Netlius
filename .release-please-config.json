@@ -5,6 +5,7 @@
       "package-name": "netlius",
       "include-component-in-tag": false,
       "include-v-in-tag": false,
+      "draft": true,
       "extra-files": [
         {
           "type": "generic",
