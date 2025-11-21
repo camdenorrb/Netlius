@@ -6,7 +6,8 @@
       "include-component-in-tag": false,
       "include-v-in-tag": false,
       "extra-files": [
-        "build.gradle.kts"
+        "build.gradle.kts",
+        "README.md"
       ]
     }
   }

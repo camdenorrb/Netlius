@@ -4,6 +4,13 @@
 
 A networking library for Kotlin
 
+## Dependency
+
+Add Netlius as a dependency (version auto-updated by release-please):
+```kotlin
+implementation("dev.twelveoclock:netlius:1.6.1") // x-release-please-version
+```
+
 ---
 
 #### "Hello world" Server + Client example
@@ -29,4 +36,3 @@ fun main() {
     server.stop()
 }
 ```
-
