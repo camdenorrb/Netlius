@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/camdenorrb/Netlius/compare/1.3.1...1.3.2) (2025-11-21)
+
+
+### Bug Fixes
+
+* release automation ([#66](https://github.com/camdenorrb/Netlius/issues/66)) ([e00a89e](https://github.com/camdenorrb/Netlius/commit/e00a89e457f2d860627c0dfc8e15eeceae08734b))
+
 ## [1.3.1](https://github.com/camdenorrb/Netlius/compare/1.3.0...1.3.1) (2025-11-21)
 
 
