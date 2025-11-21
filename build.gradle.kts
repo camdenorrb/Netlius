@@ -67,9 +67,38 @@ tasks {
     }
 }
 
+/*
 publishing {
     publications {
         create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
+}
+*/
+
+publishing {
+
+    val twelveOClockUsername = (findProperty("twelveOClockUsername") as String?) ?: System.getenv("REPOSILITE_USERNAME")
+    val twelveOClockPassword = (findProperty("twelveOClockPassword") as String?) ?: System.getenv("REPOSILITE_TOKEN")
+
+    repositories {
+        maven {
+            name = "12oclockDev"
+            url = uri("https://maven.12oclock.dev/releases")
+            credentials(PasswordCredentials::class) {
+                username = twelveOClockUsername
+                password = twelveOClockPassword
+            }
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+        }
+    }
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "dev.twelveoclock"
+            artifactId = "netlius"
             from(components["java"])
         }
     }
