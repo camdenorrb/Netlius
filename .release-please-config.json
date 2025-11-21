@@ -6,12 +6,7 @@
       "include-component-in-tag": false,
       "include-v-in-tag": false,
       "extra-files": [
-        {
-          "type": "generic",
-          "path": "build.gradle.kts",
-          "regex": "version\\s*=\\s*\"(?<version>[0-9]+\\.[0-9]+\\.[0-9]+)\"",
-          "regexOptions": "m"
-        }
+        "build.gradle.kts"
       ]
     }
   }
