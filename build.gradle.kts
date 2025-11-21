@@ -79,8 +79,11 @@ publishing {
 
 publishing {
 
-    val twelveOClockUsername = (findProperty("twelveOClockUsername") as String?) ?: System.getenv("REPOSILITE_USERNAME")
-    val twelveOClockPassword = (findProperty("twelveOClockPassword") as String?) ?: System.getenv("REPOSILITE_TOKEN")
+    val twelveOClockUsername = (findProperty("twelveOClockUsername") as String?)
+        ?: System.getenv("REPOSILITE_USERNAME")
+
+    val twelveOClockPassword = (findProperty("twelveOClockPassword") as String?)
+        ?: System.getenv("REPOSILITE_TOKEN")
 
     repositories {
         maven {
