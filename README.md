@@ -8,7 +8,7 @@ A networking library for Kotlin
 
 Add Netlius as a dependency (version auto-updated by release-please):
 ```kotlin
-implementation("dev.twelveoclock:netlius:1.6.1") // x-release-please-version
+implementation("dev.twelveoclock:netlius:1.6.2") // x-release-please-version
 ```
 
 ---
