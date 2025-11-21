@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/camdenorrb/Netlius/compare/1.6.0...1.6.1) (2025-11-21)
+
+
+### Bug Fixes
+
+* auto release publish ([#78](https://github.com/camdenorrb/Netlius/issues/78)) ([7cd4b1c](https://github.com/camdenorrb/Netlius/commit/7cd4b1c2307c3678de95b4ad911a5345632b77be))
+
 ## [1.6.0](https://github.com/camdenorrb/Netlius/compare/1.5.0...1.6.0) (2025-11-21)
 
 
