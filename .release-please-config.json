@@ -9,7 +9,7 @@
         {
           "type": "generic",
           "path": "build.gradle.kts",
-          "regex": "version = \"(?<version>[0-9]+\\.[0-9]+\\.[0-9]+)\""
+          "regex": "^version\\s*=\\s*\"(?<version>[0-9]+\\.[0-9]+\\.[0-9]+)\""
         }
       ]
     }
