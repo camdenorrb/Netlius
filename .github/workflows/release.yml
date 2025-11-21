@@ -2,7 +2,7 @@ name: Release
 
 on:
   release:
-    types: [published]
+    types: [published, released]
   workflow_dispatch:
 
 permissions:
@@ -17,6 +17,12 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Validate Gradle Wrapper
+        id: validate-wrapper-1
+        uses: gradle/wrapper-validation-action@v3
+        continue-on-error: true
+
+      - name: Validate Gradle Wrapper (retry)
+        if: steps.validate-wrapper-1.outcome == 'failure'
         uses: gradle/wrapper-validation-action@v3
 
       - name: Set up JDK 21
@@ -28,6 +34,6 @@ jobs:
 
       - name: Publish to 12oclock Maven
         env:
-          TWELVE_OCLOCK_USERNAME: ${{ secrets.REPOSILITE_USERNAME }}
-          TWELVE_OCLOCK_PASSWORD: ${{ secrets.REPOSILITE_TOKEN }}
+          REPOSILITE_USERNAME: ${{ secrets.REPOSILITE_USERNAME }}
+          REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
         run: ./gradlew publish --no-daemon
