@@ -2,7 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://drone.12oclock.dev/api/badges/camdenorrb/Netlius/status.svg)](https://drone.12oclock.dev/camdenorrb/Netlius)
 
-A networking library for Kotlin
+A networking library for Kotlin.
 
 ## Dependency
 
