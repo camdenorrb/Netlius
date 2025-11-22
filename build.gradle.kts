@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "me.camdenorrb"
-version = "1.6.3" // x-release-please-version
+version = "1.6.4" // x-release-please-version
 
 repositories {
 
