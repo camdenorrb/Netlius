@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.4](https://github.com/camdenorrb/Netlius/compare/1.6.3...1.6.4) (2025-11-22)
+
+
+### Bug Fixes
+
+* update copyright year in license file ([#85](https://github.com/camdenorrb/Netlius/issues/85)) ([c538264](https://github.com/camdenorrb/Netlius/commit/c538264ecc4132747475e172df7955610874e7cc))
+
 ## [1.6.3](https://github.com/camdenorrb/Netlius/compare/1.6.2...1.6.3) (2025-11-22)
 
 
