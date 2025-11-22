@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.3](https://github.com/camdenorrb/Netlius/compare/1.6.2...1.6.3) (2025-11-22)
+
+
+### Bug Fixes
+
+* readme change ([#83](https://github.com/camdenorrb/Netlius/issues/83)) ([3e84a3d](https://github.com/camdenorrb/Netlius/commit/3e84a3d81d5aeca1c63c2facce699820acc04fa5))
+
 ## [1.6.2](https://github.com/camdenorrb/Netlius/compare/1.6.1...1.6.2) (2025-11-21)
 
 
