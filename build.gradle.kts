@@ -1,7 +1,7 @@
 plugins {
     idea
     `maven-publish`
-    id("com.github.ben-manes.versions") version "0.59.0"
+    id("com.github.ben-manes.versions") version "0.60.0"
     kotlin("jvm") version "2.4.10"
 }
 
